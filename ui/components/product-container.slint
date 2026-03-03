@@ -1,0 +1,81 @@
+import { ProductContainerStyles } from "../style/defaults.slint";
+
+export component ProductContainer inherits Rectangle {
+    in property <string> title;
+    in property <image> image;
+    in property <string> description;
+    in property <string> category: "Uncategorized";
+    in property <string> price: "Pret: N/A";
+
+    background: ProductContainerStyles.background;
+    border-color: ProductContainerStyles.border-color;
+    border-width: 1px;
+    border-radius: 10px;
+    width: ProductContainerStyles.width;
+    height: ProductContainerStyles.height;
+
+
+    VerticalLayout {
+        alignment: start;
+        spacing: 2px;
+        HorizontalLayout {
+            padding-top: 10px;
+            x: 10px;
+            alignment: start;
+            spacing: 5px;
+            Rectangle {
+                width: ProductContainerStyles.category-width;
+                height: ProductContainerStyles.category-height;
+                background: ProductContainerStyles.category-background;
+                border-radius: ProductContainerStyles.category-border-radius;
+                Text {
+                    text: category;
+                    font-size: ProductContainerStyles.category-font-size;
+                    font-weight: ProductContainerStyles.category-font-weight;
+                    color: ProductContainerStyles.category-font-color;
+                }
+            }
+        }
+        HorizontalLayout {
+            alignment: center;
+            Image {
+                width: ProductContainerStyles.image-width;
+                height: ProductContainerStyles.image-height;
+                source: image;
+            }
+        }
+        HorizontalLayout {
+            alignment: center;
+            Text {
+                text: title;
+                font-size: ProductContainerStyles.title-font-size;
+                font-weight: ProductContainerStyles.title-font-weight;
+                color: ProductContainerStyles.title-color;
+            }
+        }
+        HorizontalLayout {
+            alignment: center;
+            Text {
+                text: description;
+                vertical-alignment: top;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                font-size: ProductContainerStyles.font-size;
+                font-weight: ProductContainerStyles.font-weight;
+                color: ProductContainerStyles.font-color;
+            }
+        }
+        HorizontalLayout {
+            alignment: center;
+            Text {
+                text: price;
+                font-size: ProductContainerStyles.title-font-size;
+                font-weight: ProductContainerStyles.title-font-weight;
+                color: ProductContainerStyles.title-color;
+            }
+        }
+
+    }
+
+
+}

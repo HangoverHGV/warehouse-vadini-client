@@ -1,0 +1,43 @@
+import { ButtonType } from "../types.slint";
+import { ButtonStyles } from "../style/defaults.slint";
+
+export component CustomButton inherits Rectangle {
+    in property <ButtonType> button-type: ButtonType.Default;
+    in property <string> text: "Button";
+    in property <length> font-size: ButtonStyles.button-text-size;
+    in property <int> font-weight: ButtonStyles.button-text-weight;
+
+
+    callback clicked();
+
+    property <brush> bg: button-type == ButtonType.Success ? ButtonStyles.success-background
+              : button-type == ButtonType.Danger   ? ButtonStyles.danger-background
+              :                                      ButtonStyles.default-background;
+
+    property <brush> fg: button-type == ButtonType.Success ? ButtonStyles.success-foreground
+              : button-type == ButtonType.Danger   ? ButtonStyles.danger-foreground
+              :                                      ButtonStyles.default-foreground;
+
+    background: bg;
+    border-radius: ButtonStyles.button-border-radius;
+    width: ButtonStyles.button-width;
+    height: ButtonStyles.button-height;
+
+    animate background {
+         duration: 200ms;
+    }
+    Text {
+        width: parent.width;
+        height: parent.height;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        text: root.text;
+        color: fg;
+        font-size: root.font-size;
+        font-weight: root.font-weight;
+    }
+
+        touch := TouchArea{
+        clicked => { root.clicked(); }
+    }
+}

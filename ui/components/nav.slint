@@ -1,0 +1,33 @@
+import { NavbarStyle, ButtonStyles } from "../style/defaults.slint";
+import { CustomButton } from "./button.slint";
+import { ButtonType } from "../types.slint";
+import { OneLineInput } from "./onelineinput.slint";
+
+export component NavBar inherits Rectangle {
+    width: NavbarStyle.width;
+    height: NavbarStyle.height;
+    background: NavbarStyle.background;
+    
+    HorizontalLayout {
+        spacing: 30px;
+        padding-left: 15px;
+        padding-top: root.height / 2 - ButtonStyles.button-height / 2;
+        alignment: start;
+
+        CustomButton {
+            text: "Catalog";
+        }
+
+        CustomButton {
+            text: "Edit Produse";
+        }
+
+        CustomButton {
+            text: "Comenzi";
+        }
+
+    }
+
+}
+
+

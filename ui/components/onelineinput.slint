@@ -1,0 +1,40 @@
+import { OneLineInputStyles } from "../style/defaults.slint";
+
+export component OneLineInput inherits Rectangle {
+    in-out property <string> text;
+    in property <string> placeholder-text: "e.x. 12";
+    in property <image> icon;
+
+    height: OneLineInputStyles.font-size + 3px;
+
+    property <length> icon-offset: icon.width > 0 ? root.height + 4px : 0px;
+
+    if icon.width > 0: Image {
+        x: 4px;
+        y: (parent.height - self.height) / 2;
+        width: parent.height;
+        height: parent.height;
+        source: icon;
+    }
+
+    if text == "": Text {
+        x: 10px + icon-offset;
+        y: (parent.height - self.height) / 2;
+        text: placeholder-text;
+        color: OneLineInputStyles.garied-font-color;
+        font-size: OneLineInputStyles.font-size;
+    }
+
+    TextInput {
+        x: 10px + icon-offset;
+        width: parent.width - 20px - icon-offset;
+        height: parent.height;
+        vertical-alignment: center;
+        text <=> root.text;
+        color: OneLineInputStyles.font-color;
+        font-size: OneLineInputStyles.font-size;
+        cursor-position-changed(position) => {
+        }
+        input-type: number;
+    }
+}

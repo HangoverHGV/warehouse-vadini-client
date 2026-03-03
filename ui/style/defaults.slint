@@ -1,9 +1,46 @@
-export global MainWindow {
+
+export global MainWindowStyle {
     out property <brush> background: #ffffff;
 
     out property <length> width: 1024px;
     out property <length> height: 768px;
+}
+
+export global NavbarStyle {
+    out property <brush> background: #adadad;
+
+    out property <length> width: 1024px;
+    out property <length> height: 100px;
 
     out property <length> font-size: 16px;
+}
+
+export global ButtonStyles {
+    out property <brush> default-background: #4b73f7;
+    out property <brush> success-background: #4CAF50;
+    out property <brush> danger-background: #f44336;
+
+    out property <brush> default-foreground: #000000;
+    out property <brush> success-foreground: #ffffff;
+    out property <brush> danger-foreground: #ffffff;
+
+    out property <int> button-text-weight: 500;
+    out property <length> button-text-size: 16px;
+
+    out property <length> button-width: 120px;
+    out property <length> button-height: 40px;
+
+    out property <length> button-border-radius: 10px;
+}
+
+export global OneLineInputStyles {
+    out property <brush> font-color: #000000;
+    out property <brush> garied-font-color: #7a7a7a;
+    out property <length> font-size: 16px;
     
+    out property <length> width: 200px;
+    out property <length> height: 30px;
+    
+    
+
 }

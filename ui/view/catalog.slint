@@ -1,0 +1,28 @@
+import { ProductContainer } from "../components/product-container.slint";
+import { CatalogStyle, ProductContainerStyles } from "../style/defaults.slint";
+import { ProductDetails } from "../types.slint";
+
+
+export component Catalog inherits Rectangle {
+    in property <[ProductDetails]> products;
+
+    property <int> cols: max(1, self.width / (ProductContainerStyles.width + CatalogStyle.spacing));
+    property <int> num-rows: products.length == 0 ? 0 : (products.length + cols - 1) / cols;
+
+    height: num-rows * (ProductContainerStyles.height + CatalogStyle.spacing) + CatalogStyle.x * 2;
+
+    GridLayout {
+        spacing: CatalogStyle.spacing;
+        padding: CatalogStyle.x;
+
+        for product[i] in products: ProductContainer {
+            row: i / root.cols;
+            col: Math.mod(i, root.cols);
+            title: product.title;
+            image: product.image;
+            description: product.description;
+            category: product.category;
+            price: product.price;
+        }
+    }
+}

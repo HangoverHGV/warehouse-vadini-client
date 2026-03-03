@@ -1,8 +1,9 @@
-import { Button, VerticalBox } from "std-widgets.slint";
+import { Button, VerticalBox, ScrollView } from "std-widgets.slint";
 import { MainWindowStyle } from "style/defaults.slint";
 import { NavBar } from "components/nav.slint";
 import { Filter } from "components/filter.slint";
-import { ProductContainer } from "components/product-container.slint";
+import { Catalog } from "view/catalog.slint";
+
 
 export component Main inherits Window {
     width: MainWindowStyle.width;
@@ -11,22 +12,16 @@ export component Main inherits Window {
 
     VerticalLayout {
         spacing: 5px;
-        alignment: start;
-        NavBar {
-        }
+        NavBar { }
         Filter {
             x: 10px;
         }
-        HorizontalLayout {
-            x: 10px;
-            ProductContainer {
-                title: "Geka Elit 6013";
-                image: @image-url("mockup-image/GekaElit6013.png");
-                description: "Electrozi 6013";
-                category: "Electrozi";
-                price: "Pret: 50 RON";
+        ScrollView {
+            catalog-view := Catalog {
+                width: parent.width;
+                products: [];
             }
-        }   
-
+            viewport-height: catalog-view.height;
+        }
     }
 }

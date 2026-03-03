@@ -19,24 +19,21 @@ export component Filter inherits Rectangle {
         padding-top: root.height / 2 - bydropdown.height / 2 ;
         alignment: start;
 
+        Text {
+            text: "Categorie: ";
+            color: DropdownStyles.font-color;
+            font-size: DropdownStyles.font-size;
+            font-weight: DropdownStyles.font-weight;
+        }
+
         bydropdown := CustomDropdown {
             width: 100px;
-            model: ["Nume", "Categorie", "Pret"];
-            current-value: "Nume";
+            model: ["Tot", "Electrozi", "Sarma", "Abrazive", "Pistoleti", "Accesorii", "Reductoare", "Protectie", "Chimicale"];
+            current-value: "Tot";
             background: root.background;
             dropdown-background: root.background;
             icon: Icons.filter;
         }
-
-        ascending := CustomDropdown {
-            width: 100px;
-            model: ["Crescator", "Descrescator"];
-            current-value: "Crescator";
-            background: root.background;
-            dropdown-background: root.background;
-            icon: Icons.arrows;
-        }
-
 
     }
 }

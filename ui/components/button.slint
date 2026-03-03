@@ -18,7 +18,7 @@ export component CustomButton inherits Rectangle {
               : button-type == ButtonType.Danger   ? ButtonStyles.danger-foreground
               :                                      ButtonStyles.default-foreground;
 
-    background: bg;
+    background: touch.pressed ? bg.darker(30%) : touch.has-hover ? bg.brighter(20%) : bg;
     border-radius: ButtonStyles.button-border-radius;
     width: ButtonStyles.button-width;
     height: ButtonStyles.button-height;

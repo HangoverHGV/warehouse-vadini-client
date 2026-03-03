@@ -5,7 +5,7 @@ export component OneLineInput inherits Rectangle {
     in property <string> placeholder-text: "Cauta...";
     in property <image> icon;
 
-
+    width: OneLineInputStyles.width;
     height: ButtonStyles.button-height;
 
     property <length> icon-offset: icon.width > 0 ? root.height + 4px : 0px;
@@ -14,7 +14,6 @@ export component OneLineInput inherits Rectangle {
     border-color: OneLineInputStyles.border-color;
     border-width: OneLineInputStyles.border-width;
     border-radius: OneLineInputStyles.border-radius;
-
 
     if icon.width > 0: Image {
         x: 4px;
@@ -42,6 +41,5 @@ export component OneLineInput inherits Rectangle {
         font-size: OneLineInputStyles.font-size;
         cursor-position-changed(position) => {
         }
-        input-type: number;
     }
 }

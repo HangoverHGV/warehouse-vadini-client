@@ -2,6 +2,7 @@ import { NavbarStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "./button.slint";
 import { ButtonType } from "../types.slint";
 import { OneLineInput } from "./onelineinput.slint";
+import { Icons } from "../style/icons.slint";
 
 export component NavBar inherits Rectangle {
     width: NavbarStyle.width;
@@ -24,6 +25,11 @@ export component NavBar inherits Rectangle {
 
         CustomButton {
             text: "Comenzi";
+        }
+
+        OneLineInput {
+            icon: Icons.search;
+            background: #ffffff;
         }
 
     }

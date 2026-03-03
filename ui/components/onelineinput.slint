@@ -1,13 +1,20 @@
-import { OneLineInputStyles } from "../style/defaults.slint";
+import { OneLineInputStyles, ButtonStyles } from "../style/defaults.slint";
 
 export component OneLineInput inherits Rectangle {
     in-out property <string> text;
-    in property <string> placeholder-text: "e.x. 12";
+    in property <string> placeholder-text: "Search...";
     in property <image> icon;
 
-    height: OneLineInputStyles.font-size + 3px;
+
+    height: ButtonStyles.button-height;
 
     property <length> icon-offset: icon.width > 0 ? root.height + 4px : 0px;
+
+    background: OneLineInputStyles.background;
+    border-color: OneLineInputStyles.border-color;
+    border-width: OneLineInputStyles.border-width;
+    border-radius: OneLineInputStyles.border-radius;
+
 
     if icon.width > 0: Image {
         x: 4px;

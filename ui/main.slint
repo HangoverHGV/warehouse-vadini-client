@@ -1,6 +1,7 @@
 import { Button, VerticalBox } from "std-widgets.slint";
 import { MainWindowStyle } from "style/defaults.slint";
 import { NavBar } from "components/nav.slint";
+import { Filter } from "components/filter.slint";
 
 export component Main inherits Window {
     width: MainWindowStyle.width;
@@ -8,9 +9,13 @@ export component Main inherits Window {
     background: MainWindowStyle.background;
 
     VerticalLayout {
+        spacing: 5px;
         alignment: start;
         NavBar {
-    }
+        }
+        Filter {
+            x: 10px;
+        }
 
-}
+    }
 }

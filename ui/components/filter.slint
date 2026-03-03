@@ -1,0 +1,42 @@
+import { FilterStyles, DropdownStyles } from "../style/defaults.slint";
+import { CustomDropdown } from "./dropdown.slint";
+import { Icons } from "../style/icons.slint";
+
+export component Filter inherits Rectangle {
+    
+    width: FilterStyles.width;
+    height: FilterStyles.height;
+    background: FilterStyles.background;
+    border-color: FilterStyles.border-color;
+    border-width: FilterStyles.border-width;
+    border-radius: FilterStyles.border-radius;
+
+    property <length> spacing: 10px;
+
+    HorizontalLayout {
+        spacing: root.spacing;
+        padding-left: 10px;
+        padding-top: root.height / 2 - bydropdown.height / 2 ;
+        alignment: start;
+
+        bydropdown := CustomDropdown {
+            width: 100px;
+            model: ["Nume", "Categorie", "Pret"];
+            current-value: "Nume";
+            background: root.background;
+            dropdown-background: root.background;
+            icon: Icons.filter;
+        }
+
+        ascending := CustomDropdown {
+            width: 100px;
+            model: ["Crescator", "Descrescator"];
+            current-value: "Crescator";
+            background: root.background;
+            dropdown-background: root.background;
+            icon: Icons.arrows;
+        }
+
+
+    }
+}

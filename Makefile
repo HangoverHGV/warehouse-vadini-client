@@ -8,7 +8,7 @@ all: linux
 
 # ── Native Linux / CachyOS ────────────────────────────────────────────────────
 linux:
-	cargo build --release
+	cargo build --release --features desktop
 	mkdir -p $(DIST)
 	tar -czf $(DIST)/$(PKG)-linux-x86_64.tar.gz \
 	    -C target/release $(APP) \
@@ -37,7 +37,7 @@ appimage: linux
 # ── Ubuntu .deb ────────────────────────────────────────────────────────────────
 #   Install: cargo install cargo-deb
 deb:
-	cargo deb
+	cargo deb --features desktop
 	mkdir -p $(DIST)
 	cp target/debian/*.deb $(DIST)/
 	@echo "→ $(DIST)/*.deb"

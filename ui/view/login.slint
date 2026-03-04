@@ -5,13 +5,34 @@ import { CustomButton } from "../components/button.slint";
 
 export component LoginView inherits Rectangle {
 
-    callback login(string, string);  // (username, password)
+    callback login(string, string, string);  // (server_url, username, password)
+    in-out property <string> server-url;
 
     background: LoginStyle.background;
 
     VerticalLayout {
         spacing: 10px;
         alignment: center;
+
+        HorizontalLayout {
+            alignment: center;
+            Text {
+                text: "Server URL: ";
+                font-size: LoginStyle.font-size;
+                color: LoginStyle.font-color;
+                font-weight: LoginStyle.font-weight;
+            }
+
+            server-input := OneLineInput {
+                placeholder-text: "https://example.com";
+                width: 300px;
+                txt: root.server-url;
+                accepted => {
+                    root.login(self.txt, username-input.txt, password-input.txt);
+                }
+            }
+        }
+
         HorizontalLayout {
             alignment: center;
             Text {
@@ -25,7 +46,7 @@ export component LoginView inherits Rectangle {
                 placeholder-text: "username";
                 width: 300px;
                 accepted => {
-                    root.login(username-input.txt, password-input.txt);
+                    root.login(server-input.txt, self.txt, password-input.txt);
                 }
             }
         }
@@ -44,7 +65,7 @@ export component LoginView inherits Rectangle {
                 input-type: password;
                 width: 300px;
                 accepted => {
-                    root.login(username-input.txt, password-input.txt);
+                    root.login(server-input.txt, username-input.txt, self.txt);
                 }
             }
         }
@@ -54,7 +75,7 @@ export component LoginView inherits Rectangle {
             CustomButton {
                 text: "Log in";
                 clicked => {
-                    root.login(username-input.txt, password-input.txt);
+                    root.login(server-input.txt, username-input.txt, password-input.txt);
                 }
             }
         }

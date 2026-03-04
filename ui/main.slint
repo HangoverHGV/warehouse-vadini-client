@@ -29,7 +29,8 @@ export component Main inherits Window {
     in-out property <string> create-image-path: "";
     in-out property <[VariationInput]> create-variations;
 
-    callback login(string, string);
+    in-out property <string> server-url;
+    callback login(string, string, string);  // (server_url, username, password)
     callback open-product(int);
     callback search(string);
     callback filter-changed(string);
@@ -71,7 +72,8 @@ export component Main inherits Window {
     if !logged: LoginView {
         width: root.width;
         height: root.height;
-        login(user, pass) => { root.login(user, pass); }
+        server-url: root.server-url;
+        login(url, user, pass) => { root.login(url, user, pass); }
     }
 
     if logged: VerticalLayout {

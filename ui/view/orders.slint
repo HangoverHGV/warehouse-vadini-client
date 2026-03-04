@@ -1,0 +1,165 @@
+import { ScrollView } from "std-widgets.slint";
+import { TableStyle, ButtonStyles } from "../style/defaults.slint";
+import { CustomButton } from "../components/button.slint";
+import { OrderData } from "../types.slint";
+
+export component OrdersView inherits Rectangle {
+    in property <[OrderData]> orders;
+    callback go-back();
+    callback refresh-orders();
+
+    VerticalLayout {
+        spacing: 0px;
+
+        // Top bar
+        Rectangle {
+            height: 50px;
+            background: #f8f8f8;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                alignment: start;
+                spacing: 10px;
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "< Inapoi";
+                        width: 100px;
+                        clicked => { root.go-back(); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "Reincarca";
+                        width: 110px;
+                        clicked => { root.refresh-orders(); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    Text {
+                        text: "Comenzi (\{orders.length})";
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #000000;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        // Column header
+        Rectangle {
+            height: 44px;
+            background: TableStyle.header-background;
+            border-color: TableStyle.border-color;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                spacing: 0px;
+                Text { width: 50px;  text: "ID";             font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 160px; text: "Client";          font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 180px; text: "Adresa factura";  font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 180px; text: "Adresa livrare";  font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 110px; text: "Total";           font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 80px;  text: "Discount";        font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { horizontal-stretch: 1; text: "Data";  font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+            }
+        }
+
+        // Order rows
+        ScrollView {
+            vertical-stretch: 1;
+
+            VerticalLayout {
+                for order[i] in orders: VerticalLayout {
+                    // Order header row
+                    Rectangle {
+                        height: 50px;
+                        background: Math.mod(i, 2) == 0 ? TableStyle.row-even-background : TableStyle.row-odd-background;
+                        border-color: TableStyle.border-color;
+                        border-width: 1px;
+
+                        HorizontalLayout {
+                            padding-left: 10px;
+                            padding-right: 10px;
+                            spacing: 0px;
+                            Text { width: 50px;  text: "\{order.id}";         font-size: TableStyle.font-size; color: TableStyle.font-color; vertical-alignment: center; font-weight: 600; }
+                            Text { width: 160px; text: order.client-name;      font-size: TableStyle.font-size; color: TableStyle.font-color; vertical-alignment: center; overflow: elide; }
+                            Text { width: 180px; text: order.address-invoice;  font-size: TableStyle.font-size; color: TableStyle.font-color; vertical-alignment: center; overflow: elide; }
+                            Text { width: 180px; text: order.address-delivery; font-size: TableStyle.font-size; color: TableStyle.font-color; vertical-alignment: center; overflow: elide; }
+                            Text { width: 110px; text: "\{order.total} RON";   font-size: TableStyle.font-size; color: #1565c0;               vertical-alignment: center; font-weight: 600; }
+                            Text { width: 80px;  text: "\{order.discount}%";   font-size: TableStyle.font-size; color: TableStyle.font-color; vertical-alignment: center; }
+                            Text { horizontal-stretch: 1; text: order.created-at; font-size: 12px; color: #666666; vertical-alignment: center; overflow: elide; }
+                        }
+                    }
+
+                    // Items sub-header
+                    if order.items.length > 0: Rectangle {
+                        height: 28px;
+                        background: #e8f4fd;
+                        border-color: #b0d4f1;
+                        border-width: 1px;
+
+                        HorizontalLayout {
+                            padding-left: 30px;
+                            padding-right: 10px;
+                            spacing: 0px;
+                            Text { width: 160px; text: "Produs";      font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                            Text { width: 130px; text: "Dimensiune";  font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                            Text { width: 110px; text: "Ambalaj";     font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                            Text { width: 100px; text: "Standard";    font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                            Text { width: 80px;  text: "Cantitate";   font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                            Text { width: 100px; text: "Pret";        font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                            Text { width: 80px;  text: "Discount";    font-size: 12px; font-weight: 600; color: #1565c0; vertical-alignment: center; }
+                        }
+                    }
+
+                    // Item rows
+                    for item[j] in order.items: Rectangle {
+                        height: 30px;
+                        background: #f0f8ff;
+                        border-color: #cce0f5;
+                        border-width: 1px;
+
+                        HorizontalLayout {
+                            padding-left: 30px;
+                            padding-right: 10px;
+                            spacing: 0px;
+                            Text { width: 160px; text: item.product-name;            font-size: 13px; color: #333333; vertical-alignment: center; overflow: elide; font-weight: 600; }
+                            Text { width: 130px; text: item.dimensions;              font-size: 13px; color: #333333; vertical-alignment: center; overflow: elide; }
+                            Text { width: 110px; text: item.packaging;               font-size: 13px; color: #333333; vertical-alignment: center; overflow: elide; }
+                            Text { width: 100px; text: item.standard;                font-size: 13px; color: #333333; vertical-alignment: center; overflow: elide; }
+                            Text { width: 80px;  text: "\{item.quantity} buc";      font-size: 13px; color: #333333; vertical-alignment: center; }
+                            Text { width: 100px; text: "\{item.price} RON";         font-size: 13px; color: #1565c0; vertical-alignment: center; font-weight: 600; }
+                            Text { width: 80px;  text: "\{item.item-discount}%";    font-size: 13px; color: #333333; vertical-alignment: center; }
+                        }
+                    }
+
+                    // No items indicator
+                    if order.items.length == 0: Rectangle {
+                        height: 28px;
+                        background: #fff8e1;
+                        border-color: #ffe082;
+                        border-width: 1px;
+                        Text {
+                            x: 30px;
+                            width: parent.width - 30px;
+                            height: parent.height;
+                            text: "Niciun produs incarcat";
+                            font-size: 12px;
+                            color: #999999;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

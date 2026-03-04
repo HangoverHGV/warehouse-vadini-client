@@ -1,17 +1,54 @@
-import { Button, VerticalBox, ScrollView } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { MainWindowStyle } from "style/defaults.slint";
 import { NavBar } from "components/nav.slint";
 import { Filter } from "components/filter.slint";
 import { Catalog } from "view/catalog.slint";
 import { LoginView } from "view/login.slint";
-import { ProductDetails } from "types.slint";
-
+import { ProductDetail } from "view/product-detail.slint";
+import { CartView } from "view/cart.slint";
+import { OrdersView } from "view/orders.slint";
+import { UsersView } from "view/users.slint";
+import { CreateProductView } from "view/create.slint";
+import { ProductDetails, ProductFull, CartItem, OrderData, UserData } from "types.slint";
 
 export component Main inherits Window {
-
     in-out property <bool> logged: false;
+    in-out property <bool> is-admin: false;
+    in-out property <int> current-view: 0;  // 0=catalog 1=detail 2=cart 3=orders 4=users 5=create-product
+
     in-out property <[ProductDetails]> products;
+    in-out property <[string]> categories: ["Tot"];
+    in-out property <string> search-query: "";
+    in-out property <string> filter-category: "Tot";
+    in-out property <ProductFull> selected-product;
+    in-out property <[CartItem]> cart-items;
+    in-out property <int> cart-count: 0;
+    in-out property <string> cart-total: "0.00 RON";
+    in-out property <[OrderData]> orders;
+    in-out property <[UserData]> users;
+
     callback login(string, string);
+    callback open-product(int);
+    callback search(string);
+    callback filter-changed(string);
+    callback add-to-cart(int);
+    callback remove-from-cart(int);
+    callback update-quantity(int, int);
+    callback send-order(string, string, string, float);
+    callback clear-cart();
+    // Product admin
+    callback create-product(string, string, float);
+    callback delete-product(int);
+    callback update-variation(int, int, string, string, string, float);
+    callback delete-variation(int, int);
+    callback add-variation(int, string, string, string, float);
+    // Orders
+    callback load-orders();
+    // Users
+    callback load-users();
+    callback create-user(string, string, string, bool, bool);
+    callback update-user(int, string, string, bool, bool);
+    callback delete-user(int);
 
     width: MainWindowStyle.width;
     height: MainWindowStyle.height;
@@ -20,26 +57,94 @@ export component Main inherits Window {
     if !logged: LoginView {
         width: root.width;
         height: root.height;
-        login(user, pass) => {
-            root.login(user, pass);
-        }
+        login(user, pass) => { root.login(user, pass); }
     }
 
     if logged: VerticalLayout {
-        spacing: 5px;
-        NavBar { }
+        spacing: 0px;
 
-        Filter {
-            x: 10px;
+        NavBar {
+            is-admin: root.is-admin;
+            cart-count: root.cart-count;
+            go-catalog => { root.current-view = 0; }
+            go-cart => { root.current-view = 2; }
+            go-create-product => { root.current-view = 5; }
+            go-orders => {
+                root.current-view = 3;
+                root.load-orders();
+            }
+            go-users => {
+                root.current-view = 4;
+                root.load-users();
+            }
+            search-changed(q) => { root.search(q); }
         }
 
-        ScrollView {
-            catalog-view := Catalog {
-                width: parent.width;
-                products: root.products;
+        if current-view == 0: VerticalLayout {
+            spacing: 5px;
+
+            Filter {
+                categories: root.categories;
+                category-selected(cat) => { root.filter-changed(cat); }
             }
 
-            viewport-height: catalog-view.height;
+            ScrollView {
+                catalog-view := Catalog {
+                    width: parent.width;
+                    products: root.products;
+                    open-product(id) => { root.open-product(id); }
+                }
+                viewport-height: catalog-view.height;
+            }
+        }
+
+        if current-view == 1: ProductDetail {
+            product: root.selected-product;
+            is-admin: root.is-admin;
+            go-back => { root.current-view = 0; }
+            add-to-cart(vid) => { root.add-to-cart(vid); }
+            update-variation(vid, d, pk, st, pr) => {
+                root.update-variation(root.selected-product.id, vid, d, pk, st, pr);
+            }
+            delete-variation(vid) => {
+                root.delete-variation(root.selected-product.id, vid);
+            }
+            add-variation(d, pk, st, pr) => {
+                root.add-variation(root.selected-product.id, d, pk, st, pr);
+            }
+            delete-product => {
+                root.delete-product(root.selected-product.id);
+            }
+        }
+
+        if current-view == 2: CartView {
+            cart-items: root.cart-items;
+            cart-total: root.cart-total;
+            go-back => { root.current-view = 0; }
+            remove-from-cart(vid) => { root.remove-from-cart(vid); }
+            update-quantity(vid, qty) => { root.update-quantity(vid, qty); }
+            send-order(cn, ai, ad, disc) => { root.send-order(cn, ai, ad, disc); }
+            clear-cart => { root.clear-cart(); }
+        }
+
+        if current-view == 3: OrdersView {
+            orders: root.orders;
+            go-back => { root.current-view = 0; }
+            refresh-orders => { root.load-orders(); }
+        }
+
+        if current-view == 4: UsersView {
+            users: root.users;
+            go-back => { root.current-view = 0; }
+            refresh-users => { root.load-users(); }
+            create-user(u, e, p, a, s) => { root.create-user(u, e, p, a, s); }
+            update-user(id, u, e, a, s) => { root.update-user(id, u, e, a, s); }
+            delete-user(id) => { root.delete-user(id); }
+        }
+
+        if current-view == 5: CreateProductView {
+            go-back => { root.current-view = 0; }
+            create-product(n, c, p) => { root.create-product(n, c, p); }
         }
     }
 }

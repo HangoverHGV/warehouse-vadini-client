@@ -1,0 +1,263 @@
+import { ScrollView, LineEdit } from "std-widgets.slint";
+import { TableStyle, ButtonStyles } from "../style/defaults.slint";
+import { CustomButton } from "../components/button.slint";
+import { ButtonType, UserData } from "../types.slint";
+
+export component UsersView inherits Rectangle {
+    in property <[UserData]> users;
+    callback go-back();
+    callback refresh-users();
+    callback create-user(string, string, string, bool, bool);
+    callback update-user(int, string, string, bool, bool);
+    callback delete-user(int);
+
+    property <bool> show-create-form: false;
+    property <string> new-username: "";
+    property <string> new-email: "";
+    property <string> new-password: "";
+    property <bool> new-is-superuser: false;
+
+    VerticalLayout {
+        spacing: 0px;
+
+        // Top bar
+        Rectangle {
+            height: 50px;
+            background: #f8f8f8;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                alignment: start;
+                spacing: 10px;
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "< Inapoi";
+                        width: 100px;
+                        clicked => { root.go-back(); }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "+ Utilizator";
+                        button-type: ButtonType.Success;
+                        width: 120px;
+                        clicked => { root.show-create-form = !root.show-create-form; }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "Reincarca";
+                        width: 100px;
+                        clicked => { root.refresh-users(); }
+                    }
+                }
+            }
+        }
+
+        // Create form
+        if root.show-create-form: Rectangle {
+            height: 80px;
+            background: #eef6ff;
+            border-color: #90c4f9;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                spacing: 10px;
+                alignment: start;
+
+                VerticalLayout {
+                    alignment: center;
+                    Text { text: "Username:"; font-size: 12px; }
+                    LineEdit {
+                        width: 160px;
+                        height: 34px;
+                        placeholder-text: "username";
+                        edited(t) => { root.new-username = t; }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    Text { text: "Email:"; font-size: 12px; }
+                    LineEdit {
+                        width: 180px;
+                        height: 34px;
+                        placeholder-text: "email@example.com";
+                        edited(t) => { root.new-email = t; }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    Text { text: "Parola:"; font-size: 12px; }
+                    LineEdit {
+                        width: 140px;
+                        height: 34px;
+                        placeholder-text: "parola";
+                        input-type: password;
+                        edited(t) => { root.new-password = t; }
+                    }
+                }
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 4px;
+                    CustomButton {
+                        text: "Salveaza";
+                        button-type: ButtonType.Success;
+                        width: 100px;
+                        height: 30px;
+                        clicked => {
+                            root.create-user(
+                                root.new-username, root.new-email,
+                                root.new-password, true, root.new-is-superuser
+                            );
+                            root.show-create-form = false;
+                            root.new-username = "";
+                            root.new-email = "";
+                            root.new-password = "";
+                            root.new-is-superuser = false;
+                        }
+                    }
+                    CustomButton {
+                        text: "Anuleaza";
+                        button-type: ButtonType.Danger;
+                        width: 100px;
+                        height: 30px;
+                        clicked => { root.show-create-form = false; }
+                    }
+                }
+            }
+        }
+
+        // Table header
+        Rectangle {
+            height: 44px;
+            background: TableStyle.header-background;
+            border-color: TableStyle.border-color;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                spacing: 0px;
+                Text { width: 50px; text: "ID"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 200px; text: "Username"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 250px; text: "Email"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 80px; text: "Activ"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Text { width: 80px; text: "Admin"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                Rectangle { horizontal-stretch: 1; }
+            }
+        }
+
+        // User rows
+        ScrollView {
+            vertical-stretch: 1;
+
+            VerticalLayout {
+                for user[i] in users: Rectangle {
+                    property <string> edit-username: user.username;
+                    property <string> edit-email: user.email;
+                    property <bool> edit-active: user.is-active;
+                    property <bool> edit-super: user.is-superuser;
+
+                    height: 80px;
+                    background: Math.mod(i, 2) == 0 ? TableStyle.row-even-background : TableStyle.row-odd-background;
+                    border-color: TableStyle.border-color;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 0px;
+
+                        VerticalLayout {
+                            width: 50px;
+                            alignment: center;
+                            Text { text: "\{user.id}"; font-size: TableStyle.font-size; color: TableStyle.font-color; }
+                        }
+
+                        Rectangle {
+                            width: 200px;
+                            height: parent.height;
+                            TextInput {
+                                x: 4px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 8px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                color: TableStyle.font-color;
+                                text <=> edit-username;
+                            }
+                        }
+
+                        Rectangle {
+                            width: 250px;
+                            height: parent.height;
+                            TextInput {
+                                x: 4px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 8px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                color: TableStyle.font-color;
+                                text <=> edit-email;
+                            }
+                        }
+
+                        VerticalLayout {
+                            width: 80px;
+                            alignment: center;
+                            Text {
+                                text: user.is-active ? "Da" : "Nu";
+                                font-size: TableStyle.font-size;
+                                color: user.is-active ? #2e7d32 : #c62828;
+                            }
+                        }
+                        VerticalLayout {
+                            width: 80px;
+                            alignment: center;
+                            Text {
+                                text: user.is-superuser ? "Da" : "Nu";
+                                font-size: TableStyle.font-size;
+                                color: user.is-superuser ? #1565c0 : #666666;
+                            }
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 4px;
+                            HorizontalLayout {
+                                spacing: 8px;
+                                alignment: start;
+                                CustomButton {
+                                    text: "Actualizeaza";
+                                    width: 120px;
+                                    height: 30px;
+                                    clicked => {
+                                        root.update-user(
+                                            user.id,
+                                            edit-username, edit-email,
+                                            edit-active, edit-super
+                                        );
+                                    }
+                                }
+                                CustomButton {
+                                    text: "Sterge";
+                                    button-type: ButtonType.Danger;
+                                    width: 80px;
+                                    height: 30px;
+                                    clicked => { root.delete-user(user.id); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

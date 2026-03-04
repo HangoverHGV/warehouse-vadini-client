@@ -1,0 +1,452 @@
+import { ScrollView, LineEdit } from "std-widgets.slint";
+import { TableStyle, ButtonStyles } from "../style/defaults.slint";
+import { CustomButton } from "../components/button.slint";
+import { ButtonType, CartItem } from "../types.slint";
+
+export component CartView inherits Rectangle {
+    in property <[CartItem]> cart-items;
+    in property <string> cart-total: "0.00 RON";
+
+    callback go-back();
+    callback remove-from-cart(int);
+    callback update-quantity(int, int);
+    callback send-order(string, string, string, float);
+    callback clear-cart();
+
+    property <string> client-name-val: "";
+    property <string> addr-invoice-val: "";
+    property <string> addr-delivery-val: "";
+    property <float> discount-val: 0.0;
+
+    VerticalLayout {
+        spacing: 0px;
+
+        // Top bar (always visible)
+        Rectangle {
+            height: 50px;
+            background: #f8f8f8;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                alignment: start;
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "< Catalog";
+                        width: 110px;
+                        clicked => {
+                            root.go-back();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Table header (always visible)
+        Rectangle {
+            height: 44px;
+            background: TableStyle.header-background;
+            border-color: TableStyle.border-color;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                spacing: 0px;
+
+                Text {
+                    width: 160px;
+                    text: "Produs";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Text {
+                    width: TableStyle.col-dimensions;
+                    text: "Dimensiune";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Text {
+                    width: TableStyle.col-packaging;
+                    text: "Ambalaj";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Text {
+                    width: TableStyle.col-standard;
+                    text: "Standard";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Text {
+                    width: 90px;
+                    text: "Pret";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Text {
+                    width: 110px;
+                    text: "Cantitate";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Text {
+                    width: 90px;
+                    text: "Discount";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    color: TableStyle.font-color;
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
+            }
+        }
+
+        // Scrollable area: items + total + order form
+        ScrollView {
+            vertical-stretch: 1;
+
+            VerticalLayout {
+                spacing: 0px;
+
+                // Cart rows (no inner ScrollView needed)
+                for item[i] in cart-items: Rectangle {
+                    height: TableStyle.row-height;
+                    background: Math.mod(i, 2) == 0 ? TableStyle.row-even-background : TableStyle.row-odd-background;
+                    border-color: TableStyle.border-color;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 0px;
+
+                        Text {
+                            width: 160px;
+                            text: item.product-name;
+                            font-size: TableStyle.font-size;
+                            vertical-alignment: center;
+                            wrap: word-wrap;
+                            color: TableStyle.font-color;
+                        }
+
+                        Text {
+                            width: TableStyle.col-dimensions;
+                            text: item.dimensions;
+                            font-size: TableStyle.font-size;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+
+                        Text {
+                            width: TableStyle.col-packaging;
+                            text: item.packaging;
+                            font-size: TableStyle.font-size;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+
+                        Text {
+                            width: TableStyle.col-standard;
+                            text: item.standard;
+                            font-size: TableStyle.font-size;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+
+                        Text {
+                            width: 90px;
+                            text: "\{item.price} RON";
+                            font-size: TableStyle.font-size;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+
+                        // Quantity -/+
+                        HorizontalLayout {
+                            width: 110px;
+                            spacing: 4px;
+                            alignment: center;
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    width: 30px;
+                                    height: 30px;
+                                    background: #e0e0e0;
+                                    border-radius: 4px;
+                                    Text {
+                                        width: parent.width;
+                                        height: parent.height;
+                                        text: "-";
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                        font-size: 18px;
+                                        color: TableStyle.font-color;
+                                    }
+
+                                    TouchArea {
+                                        width: parent.width;
+                                        height: parent.height;
+                                        clicked => {
+                                            if item.quantity > 1 {
+                                                root.update-quantity(item.variation-id, item.quantity - 1);
+                                            } else {
+                                                root.remove-from-cart(item.variation-id);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                Text {
+                                    text: item.quantity;
+                                    font-size: TableStyle.font-size;
+                                    font-weight: 600;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                    width: 30px;
+                                    height: 30px;
+                                    color: TableStyle.font-color;
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    width: 30px;
+                                    height: 30px;
+                                    background: #e0e0e0;
+                                    border-radius: 4px;
+                                    Text {
+                                        width: parent.width;
+                                        height: parent.height;
+                                        text: "+";
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                        font-size: 18px;
+                                        color: TableStyle.font-color;
+                                    }
+
+                                    TouchArea {
+                                        width: parent.width;
+                                        height: parent.height;
+                                        clicked => {
+                                            root.update-quantity(item.variation-id, item.quantity + 1);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            width: 90px;
+                            text: "\{item.item-discount}%";
+                            font-size: TableStyle.font-size;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            horizontal-stretch: 1;
+                            CustomButton {
+                                text: "Sterge";
+                                button-type: ButtonType.Danger;
+                                width: 90px;
+                                height: 36px;
+                                clicked => {
+                                    root.remove-from-cart(item.variation-id);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Total bar
+                Rectangle {
+                    height: 50px;
+                    background: #f0f0f0;
+                    border-color: #cccccc;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        alignment: end;
+                        padding-right: 20px;
+                        VerticalLayout {
+                            alignment: center;
+                            Text {
+                                text: "Total: \{cart-total}";
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #000000;
+                            }
+                        }
+                    }
+                }
+
+                // Order form
+                Rectangle {
+                    background: #ffffff;
+                    border-color: #e0e0e0;
+                    border-width: 1px;
+
+                    VerticalLayout {
+                        spacing: 12px;
+                        padding: 20px;
+
+                        Text {
+                            text: "Date comanda";
+                            font-size: 18px;
+                            font-weight: 600;
+                            color: #000000;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text {
+                                text: "Client:";
+                                width: 140px;
+                                font-size: 15px;
+                                vertical-alignment: center;
+                                color: #000000;
+                            }
+
+                            LineEdit {
+                                width: 320px;
+                                height: 44px;
+                                placeholder-text: "Nume client";
+                                edited(text) => {
+                                    root.client-name-val = text;
+                                }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text {
+                                text: "Adresa factura:";
+                                width: 140px;
+                                font-size: 15px;
+                                vertical-alignment: center;
+                                color: #000000;
+                            }
+
+                            LineEdit {
+                                width: 320px;
+                                height: 44px;
+                                placeholder-text: "Adresa facturare";
+                                edited(text) => {
+                                    root.addr-invoice-val = text;
+                                }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text {
+                                text: "Adresa livrare:";
+                                width: 140px;
+                                font-size: 15px;
+                                vertical-alignment: center;
+                                color: #000000;
+                            }
+
+                            LineEdit {
+                                width: 320px;
+                                height: 44px;
+                                placeholder-text: "Adresa livrare";
+                                edited(text) => {
+                                    root.addr-delivery-val = text;
+                                }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text {
+                                text: "Discount (%):";
+                                width: 140px;
+                                font-size: 15px;
+                                vertical-alignment: center;
+                                color: #000000;
+                            }
+
+                            LineEdit {
+                                width: 100px;
+                                height: 44px;
+                                placeholder-text: "0";
+                                input-type: number;
+                                edited(text) => {
+                                    root.discount-val = text.to-float();
+                                }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 15px;
+                            alignment: start;
+
+                            CustomButton {
+                                text: "Trimite Comanda";
+                                button-type: ButtonType.Success;
+                                width: 180px;
+                                height: 48px;
+                                clicked => {
+                                    root.send-order(
+                                        root.client-name-val,
+                                        root.addr-invoice-val,
+                                        root.addr-delivery-val,
+                                        root.discount-val);
+                                }
+                            }
+
+                            CustomButton {
+                                text: "Goleste cosul";
+                                button-type: ButtonType.Danger;
+                                width: 150px;
+                                height: 48px;
+                                clicked => {
+                                    root.clear-cart();
+                                }
+                            }
+                        }
+
+                        // Bottom padding so buttons aren't flush at the edge
+                        Rectangle {
+                            height: 20px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

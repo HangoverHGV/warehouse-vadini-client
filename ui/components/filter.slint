@@ -3,7 +3,9 @@ import { CustomDropdown } from "./dropdown.slint";
 import { Icons } from "../style/icons.slint";
 
 export component Filter inherits Rectangle {
-    
+    in property <[string]> categories: ["Tot"];
+    callback category-selected(string);
+
     width: FilterStyles.width;
     height: FilterStyles.height;
     background: FilterStyles.background;
@@ -16,7 +18,7 @@ export component Filter inherits Rectangle {
     HorizontalLayout {
         spacing: root.spacing;
         padding-left: 10px;
-        padding-top: root.height / 2 - bydropdown.height / 2 ;
+        padding-top: root.height / 2 - bydropdown.height / 2;
         alignment: start;
 
         Text {
@@ -27,13 +29,13 @@ export component Filter inherits Rectangle {
         }
 
         bydropdown := CustomDropdown {
-            width: 100px;
-            model: ["Tot", "Electrozi", "Sarma", "Abrazive", "Pistoleti", "Accesorii", "Reductoare", "Protectie", "Chimicale"];
-            current-value: "Tot";
+            width: 140px;
+            model: categories;
+            current-value: categories[0];
             background: root.background;
             dropdown-background: root.background;
             icon: Icons.filter;
+            selected(val) => { root.category-selected(val); }
         }
-
     }
 }

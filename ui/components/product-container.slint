@@ -7,6 +7,8 @@ export component ProductContainer inherits Rectangle {
     in property <string> category: "Uncategorized";
     in property <string> price: "Pret: N/A";
 
+    callback clicked();
+
     background: ProductContainerStyles.background;
     border-color: ProductContainerStyles.border-color;
     border-width: 1px;
@@ -42,6 +44,7 @@ export component ProductContainer inherits Rectangle {
                 width: ProductContainerStyles.image-width;
                 height: ProductContainerStyles.image-height;
                 source: image;
+                image-fit: contain;
             }
         }
         HorizontalLayout {
@@ -77,5 +80,11 @@ export component ProductContainer inherits Rectangle {
 
     }
 
+    TouchArea {
+        width: parent.width;
+        height: parent.height;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
 
 }

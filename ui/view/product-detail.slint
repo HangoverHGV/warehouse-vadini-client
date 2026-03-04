@@ -1,0 +1,432 @@
+import { ScrollView } from "std-widgets.slint";
+import { TableStyle, DetailStyle, ButtonStyles } from "../style/defaults.slint";
+import { CustomButton } from "../components/button.slint";
+import { ButtonType, ProductFull, VariationDetails } from "../types.slint";
+import { Icons } from "../style/icons.slint";
+
+export component ProductDetail inherits Rectangle {
+    in property <ProductFull> product;
+    in property <bool> is-admin: false;
+
+    callback go-back();
+    callback add-to-cart(int);
+    callback update-variation(int, string, string, string, float);
+    callback delete-variation(int);
+    callback add-variation(string, string, string, float);
+    callback delete-product();
+
+    property <bool> show-add-form: false;
+    property <string> new-dims: "";
+    property <string> new-pack: "";
+    property <string> new-std: "";
+    property <string> new-price-str: "";
+
+    VerticalLayout {
+        spacing: 0px;
+
+        // Top bar
+        Rectangle {
+            height: 50px;
+            background: #f8f8f8;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                alignment: start;
+                spacing: 10px;
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "< Inapoi";
+                        width: 100px;
+                        clicked => { root.go-back(); }
+                    }
+                }
+                if root.is-admin: VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "Sterge Produs";
+                        button-type: ButtonType.Danger;
+                        width: 140px;
+                        clicked => { root.delete-product(); }
+                    }
+                }
+            }
+        }
+
+        // Product header: image + info
+        Rectangle {
+            height: DetailStyle.image-height + 40px;
+            background: #ffffff;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            HorizontalLayout {
+                spacing: 20px;
+                padding: 20px;
+                alignment: start;
+
+                Rectangle {
+                    width: DetailStyle.image-width;
+                    height: DetailStyle.image-height;
+                    border-color: #eeeeee;
+                    border-width: 1px;
+                    border-radius: 8px;
+                    clip: true;
+                    Image {
+                        width: parent.width;
+                        height: parent.height;
+                        source: product.image;
+                        image-fit: contain;
+                    }
+                }
+
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 8px;
+                    Rectangle {
+                        width: 140px;
+                        height: 25px;
+                        background: #3200e7;
+                        border-radius: 5px;
+                        Text {
+                            width: parent.width;
+                            height: parent.height;
+                            text: product.category;
+                            color: #ffffff;
+                            font-size: 13px;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                    Text {
+                        text: product.name;
+                        color: DetailStyle.title-color;
+                        font-size: DetailStyle.title-font-size;
+                        font-weight: DetailStyle.title-font-weight;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+
+        // Table header
+        Rectangle {
+            height: 44px;
+            background: TableStyle.header-background;
+            border-color: TableStyle.border-color;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                spacing: 0px;
+
+                if product.has-dimensions: Text {
+                    width: TableStyle.col-dimensions;
+                    text: "Dimensiune";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    color: DetailStyle.font-color;
+                    vertical-alignment: center;
+                }
+                if product.has-packaging: Text {
+                    width: TableStyle.col-packaging;
+                    text: "Ambalaj";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    color: DetailStyle.font-color;
+                    vertical-alignment: center;
+                }
+                if product.has-standard: Text {
+                    width: TableStyle.col-standard;
+                    text: "Standard";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    color: DetailStyle.font-color;
+                    vertical-alignment: center;
+                }
+                Text {
+                    width: TableStyle.col-price-unit;
+                    text: "Pret/unitate";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    color: DetailStyle.font-color;
+                    vertical-alignment: center;
+                }
+                Text {
+                    width: TableStyle.col-price-total;
+                    text: "Pret total";
+                    font-size: TableStyle.font-size;
+                    font-weight: 600;
+                    color: DetailStyle.font-color;
+                    vertical-alignment: center;
+                }
+                Rectangle { horizontal-stretch: 1; }
+            }
+        }
+
+        // Variation rows + admin controls
+        ScrollView {
+            vertical-stretch: 1;
+
+            VerticalLayout {
+                for variation[i] in product.variations: Rectangle {
+                    property <string> edit-dims: variation.dimensions;
+                    property <string> edit-pack: variation.packaging;
+                    property <string> edit-std: variation.standard;
+                    property <string> edit-price: "\{variation.price}";
+
+                    height: root.is-admin ? 90px : TableStyle.row-height;
+                    background: Math.mod(i, 2) == 0 ? TableStyle.row-even-background : TableStyle.row-odd-background;
+                    border-color: TableStyle.border-color;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 0px;
+
+                        if product.has-dimensions && !root.is-admin: Text {
+                            width: TableStyle.col-dimensions;
+                            text: variation.dimensions;
+                            font-size: TableStyle.font-size;
+                            color: DetailStyle.font-color;
+                            vertical-alignment: center;
+                            wrap: word-wrap;
+                        }
+                        if product.has-dimensions && root.is-admin: Rectangle {
+                            width: TableStyle.col-dimensions;
+                            height: parent.height;
+                            TextInput {
+                                x: 4px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 8px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                color: DetailStyle.font-color;
+                                text <=> edit-dims;
+                            }
+                        }
+
+                        if product.has-packaging && !root.is-admin: Text {
+                            width: TableStyle.col-packaging;
+                            text: variation.packaging;
+                            font-size: TableStyle.font-size;
+                            color: DetailStyle.font-color;
+                            vertical-alignment: center;
+                            wrap: word-wrap;
+                        }
+                        if product.has-packaging && root.is-admin: Rectangle {
+                            width: TableStyle.col-packaging;
+                            height: parent.height;
+                            TextInput {
+                                x: 4px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 8px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                color: DetailStyle.font-color;
+                                text <=> edit-pack;
+                            }
+                        }
+
+                        if product.has-standard && !root.is-admin: Text {
+                            width: TableStyle.col-standard;
+                            text: variation.standard;
+                            font-size: TableStyle.font-size;
+                            color: DetailStyle.font-color;
+                            vertical-alignment: center;
+                            wrap: word-wrap;
+                        }
+                        if product.has-standard && root.is-admin: Rectangle {
+                            width: TableStyle.col-standard;
+                            height: parent.height;
+                            TextInput {
+                                x: 4px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 8px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                color: DetailStyle.font-color;
+                                text <=> edit-std;
+                            }
+                        }
+
+                        if !root.is-admin: Text {
+                            width: TableStyle.col-price-unit;
+                            text: variation.price-per-unit;
+                            font-size: TableStyle.font-size;
+                            color: DetailStyle.font-color;
+                            vertical-alignment: center;
+                        }
+                        if root.is-admin: Rectangle {
+                            width: TableStyle.col-price-unit;
+                            height: parent.height;
+                            TextInput {
+                                x: 4px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 8px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                color: DetailStyle.font-color;
+                                text <=> edit-price;
+                            }
+                        }
+
+                        Text {
+                            width: TableStyle.col-price-total;
+                            text: variation.price-total;
+                            font-size: TableStyle.font-size;
+                            color: DetailStyle.font-color;
+                            vertical-alignment: center;
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 4px;
+                            horizontal-stretch: 1;
+
+                            CustomButton {
+                                text: "Adauga in cos";
+                                button-type: ButtonType.Success;
+                                width: TableStyle.col-action;
+                                height: 36px;
+                                clicked => { root.add-to-cart(variation.id); }
+                            }
+
+                            if root.is-admin: CustomButton {
+                                text: "Actualizeaza";
+                                width: TableStyle.col-action;
+                                height: 26px;
+                                clicked => {
+                                    root.update-variation(
+                                        variation.id,
+                                        edit-dims, edit-pack, edit-std,
+                                        edit-price.to-float()
+                                    );
+                                }
+                            }
+
+                            if root.is-admin: CustomButton {
+                                text: "Sterge varianta";
+                                button-type: ButtonType.Danger;
+                                width: TableStyle.col-action;
+                                height: 26px;
+                                clicked => { root.delete-variation(variation.id); }
+                            }
+                        }
+                    }
+                }
+
+                // Admin: Add variation bar
+                if root.is-admin: Rectangle {
+                    height: 50px;
+                    background: #f8f8f8;
+                    border-color: #e0e0e0;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        alignment: start;
+                        VerticalLayout {
+                            alignment: center;
+                            CustomButton {
+                                text: "+ Adauga varianta";
+                                width: 160px;
+                                clicked => { root.show-add-form = !root.show-add-form; }
+                            }
+                        }
+                    }
+                }
+
+                // Admin: Inline add form
+                if root.is-admin && root.show-add-form: Rectangle {
+                    height: 80px;
+                    background: #eef6ff;
+                    border-color: #90c4f9;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 8px;
+                        alignment: start;
+
+                        VerticalLayout {
+                            alignment: center;
+                            Text { text: "Dim:"; font-size: 12px; }
+                            TextInput {
+                                width: TableStyle.col-dimensions - 10px;
+                                height: 30px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                text <=> root.new-dims;
+                            }
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            Text { text: "Ambalaj:"; font-size: 12px; }
+                            TextInput {
+                                width: TableStyle.col-packaging - 10px;
+                                height: 30px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                text <=> root.new-pack;
+                            }
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            Text { text: "Standard:"; font-size: 12px; }
+                            TextInput {
+                                width: TableStyle.col-standard - 10px;
+                                height: 30px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                text <=> root.new-std;
+                            }
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            Text { text: "Pret:"; font-size: 12px; }
+                            TextInput {
+                                width: 80px;
+                                height: 30px;
+                                vertical-alignment: center;
+                                font-size: TableStyle.font-size;
+                                input-type: decimal;
+                                text <=> root.new-price-str;
+                            }
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 4px;
+                            CustomButton {
+                                text: "Salveaza";
+                                button-type: ButtonType.Success;
+                                width: 100px;
+                                height: 30px;
+                                clicked => {
+                                    root.add-variation(
+                                        root.new-dims, root.new-pack,
+                                        root.new-std, root.new-price-str.to-float()
+                                    );
+                                    root.show-add-form = false;
+                                    root.new-dims = "";
+                                    root.new-pack = "";
+                                    root.new-std = "";
+                                    root.new-price-str = "";
+                                }
+                            }
+                            CustomButton {
+                                text: "Anuleaza";
+                                button-type: ButtonType.Danger;
+                                width: 100px;
+                                height: 30px;
+                                clicked => { root.show-add-form = false; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

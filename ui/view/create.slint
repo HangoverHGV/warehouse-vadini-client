@@ -1,0 +1,127 @@
+import { ScrollView, LineEdit } from "std-widgets.slint";
+import { ButtonStyles } from "../style/defaults.slint";
+import { CustomButton } from "../components/button.slint";
+import { ButtonType } from "../types.slint";
+
+export component CreateProductView inherits Rectangle {
+    callback go-back();
+    callback create-product(string, string, float);
+
+    property <string> name-val: "";
+    property <string> category-val: "";
+    property <string> price-val: "";
+
+    VerticalLayout {
+        spacing: 0px;
+
+        Rectangle {
+            height: 50px;
+            background: #f8f8f8;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            HorizontalLayout {
+                padding-left: 10px;
+                alignment: start;
+                VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "< Inapoi";
+                        width: 100px;
+                        clicked => { root.go-back(); }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            background: #ffffff;
+            border-color: #e0e0e0;
+            border-width: 1px;
+
+            VerticalLayout {
+                spacing: 16px;
+                padding: 30px;
+
+                Text {
+                    text: "Creeaza Produs Nou";
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #000000;
+                }
+
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: start;
+                    Text {
+                        text: "Nume produs:";
+                        width: 160px;
+                        font-size: 15px;
+                        vertical-alignment: center;
+                        color: #000000;
+                    }
+                    LineEdit {
+                        width: 320px;
+                        height: 44px;
+                        placeholder-text: "Nume produs";
+                        edited(t) => { root.name-val = t; }
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: start;
+                    Text {
+                        text: "Categorie:";
+                        width: 160px;
+                        font-size: 15px;
+                        vertical-alignment: center;
+                        color: #000000;
+                    }
+                    LineEdit {
+                        width: 320px;
+                        height: 44px;
+                        placeholder-text: "Categorie";
+                        edited(t) => { root.category-val = t; }
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 10px;
+                    alignment: start;
+                    Text {
+                        text: "Pret initial (RON):";
+                        width: 160px;
+                        font-size: 15px;
+                        vertical-alignment: center;
+                        color: #000000;
+                    }
+                    LineEdit {
+                        width: 160px;
+                        height: 44px;
+                        placeholder-text: "0.00";
+                        input-type: decimal;
+                        edited(t) => { root.price-val = t; }
+                    }
+                }
+
+                HorizontalLayout {
+                    alignment: start;
+                    CustomButton {
+                        text: "Creeaza";
+                        button-type: ButtonType.Success;
+                        width: 140px;
+                        height: 48px;
+                        clicked => {
+                            root.create-product(
+                                root.name-val,
+                                root.category-val,
+                                root.price-val.to-float()
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

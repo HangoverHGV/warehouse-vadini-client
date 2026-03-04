@@ -5,30 +5,93 @@ import { OneLineInput } from "./onelineinput.slint";
 import { Icons } from "../style/icons.slint";
 
 export component NavBar inherits Rectangle {
+    in property <bool> is-admin: false;
+    in property <int> cart-count: 0;
+
+    callback go-catalog();
+    callback go-cart();
+    callback go-create-product();
+    callback go-orders();
+    callback go-users();
+    callback search-changed(string);
+
     width: NavbarStyle.width;
     height: NavbarStyle.height;
     background: NavbarStyle.background;
 
-    HorizontalLayout {
-        spacing: 30px;
-        padding-left: 15px;
-        padding-top: root.height / 2 - ButtonStyles.button-height / 2;
-        alignment: start;
+    VerticalLayout {
+        alignment: center;
+        HorizontalLayout {
+            spacing: 15px;
+            padding-left: 15px;
+            padding-right: 15px;
 
-        CustomButton {
-            text: "Catalog";
-        }
+            CustomButton {
+                text: "Catalog";
+                clicked => { root.go-catalog(); }
+            }
 
-        CustomButton {
-            text: "Edit Produse";
-        }
+            if is-admin: CustomButton {
+                text: "Creeaza Produs";
+                clicked => { root.go-create-product(); }
+            }
 
-        CustomButton {
-            text: "Comenzi";
-        }
+            if is-admin: CustomButton {
+                text: "Comenzi";
+                clicked => { root.go-orders(); }
+            }
 
-        OneLineInput {
-            icon: Icons.search;
+            if is-admin: CustomButton {
+                text: "Utilizatori";
+                clicked => { root.go-users(); }
+            }
+
+            OneLineInput {
+                icon: Icons.search;
+                edited(text) => { root.search-changed(text); }
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+
+            // Cart button
+            Rectangle {
+                width: 50px;
+                height: ButtonStyles.button-height;
+
+                Image {
+                    width: parent.width - 10px;
+                    height: parent.height - 10px;
+                    x: 5px;
+                    y: 5px;
+                    source: Icons.cart;
+                    image-fit: contain;
+                }
+
+                if cart-count > 0: Rectangle {
+                    x: 28px;
+                    y: -4px;
+                    width: 20px;
+                    height: 20px;
+                    background: #f44336;
+                    border-radius: 10px;
+                    Text {
+                        width: parent.width;
+                        height: parent.height;
+                        text: cart-count;
+                        color: #ffffff;
+                        font-size: 10px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+
+                TouchArea {
+                    width: parent.width;
+                    height: parent.height;
+                    mouse-cursor: pointer;
+                    clicked => { root.go-cart(); }
+                }
+            }
         }
     }
 }

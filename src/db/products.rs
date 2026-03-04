@@ -13,15 +13,13 @@ pub struct PendingProduct {
 }
 
 pub async fn upsert(pool: &SqlitePool, p: &ProductData) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "INSERT OR REPLACE INTO products (id, name, category, image) VALUES (?, ?, ?, ?)",
-    )
-    .bind(p.id)
-    .bind(&p.name)
-    .bind(&p.category)
-    .bind(&p.image)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT OR REPLACE INTO products (id, name, category, image) VALUES (?, ?, ?, ?)")
+        .bind(p.id)
+        .bind(&p.name)
+        .bind(&p.category)
+        .bind(&p.image)
+        .execute(pool)
+        .await?;
 
     // Rebuild variations for this product
     sqlx::query("DELETE FROM variations WHERE product_id = ?")
@@ -126,4 +124,59 @@ pub async fn delete_pending(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Erro
         .execute(pool)
         .await?;
     Ok(())
+}
+
+#[derive(sqlx::FromRow, Debug, Clone)]
+pub struct VariationWithProduct {
+    pub variation_id: i64,
+    pub product_name: String,
+    pub dimensions: Option<String>,
+    pub packaging: Option<String>,
+    pub standard: Option<String>,
+    pub price: f64,
+}
+
+pub async fn get_variation_by_id(
+    pool: &SqlitePool,
+    variation_id: i64,
+) -> Result<Option<VariationWithProduct>, sqlx::Error> {
+    sqlx::query_as::<_, VariationWithProduct>(
+        "SELECT v.id as variation_id, p.name as product_name,
+                v.dimensions, v.packaging, v.standard, v.price
+         FROM variations v
+         JOIN products p ON v.product_id = p.id
+         WHERE v.id = ?",
+    )
+    .bind(variation_id)
+    .fetch_optional(pool)
+    .await
+}
+
+pub async fn get_by_id(pool: &SqlitePool, id: i64) -> Result<Option<ProductData>, sqlx::Error> {
+    let row: Option<ProductRow> = sqlx::query_as::<_, ProductRow>(
+        "SELECT id, name, category, image FROM products WHERE id = ?",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    let r = match row {
+        None => return Ok(None),
+        Some(r) => r,
+    };
+
+    let variations: Vec<VariationData> = sqlx::query_as::<_, VariationData>(
+        "SELECT id, product_id, dimensions, packaging, standard, price, description FROM variations WHERE product_id = ?",
+    )
+    .bind(r.id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(Some(ProductData {
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        image: r.image,
+        variations,
+    }))
 }

@@ -1,12 +1,17 @@
 use reqwest::Client;
 use sqlx::SqlitePool;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::models::product::{NewProduct, ProductData};
 use crate::{api, db, images, Main, ProductDetails};
 
 type SyncError = Box<dyn std::error::Error + Send + Sync>;
+
+/// Shared in-memory cache of all products from DB.
+pub type ProductCache = Arc<Mutex<Vec<ProductData>>>;
 
 fn load_image(data_dir: &Path, image_path: &str) -> slint::Image {
     let path = images::local_path(data_dir, image_path);
@@ -39,6 +44,7 @@ fn to_slint(p: ProductData, data_dir: &Path) -> ProductDetails {
         .map(|path| load_image(data_dir, path))
         .unwrap_or_default();
     ProductDetails {
+        id: p.id as i32,
         title: p.name.into(),
         description: String::new().into(),
         category: p.category.into(),
@@ -47,13 +53,51 @@ fn to_slint(p: ProductData, data_dir: &Path) -> ProductDetails {
     }
 }
 
-pub fn refresh_ui(products: Vec<ProductData>, data_dir: PathBuf, ui_handle: slint::Weak<Main>) {
+/// Called on the UI thread — reads current search/filter from UI and updates products + categories.
+pub fn apply_filter_on_ui_thread(ui: &Main, products: &[ProductData], data_dir: &Path) {
+    let query = ui.get_search_query().to_string().to_lowercase();
+    let category = ui.get_filter_category().to_string();
+
+    // Build sorted categories list
+    let mut cat_set: BTreeSet<String> = BTreeSet::new();
+    for p in products {
+        cat_set.insert(p.category.clone());
+    }
+    let cats: Vec<slint::SharedString> = std::iter::once(slint::SharedString::from("Tot"))
+        .chain(cat_set.into_iter().map(slint::SharedString::from))
+        .collect();
+    ui.set_categories(Rc::new(slint::VecModel::from(cats)).into());
+
+    // Filter and convert
+    let filtered: Vec<ProductDetails> = products
+        .iter()
+        .filter(|p| {
+            let name_ok = query.is_empty() || p.name.to_lowercase().contains(&query);
+            let cat_ok = category.is_empty() || category == "Tot" || p.category == category;
+            name_ok && cat_ok
+        })
+        .map(|p| to_slint(p.clone(), data_dir))
+        .collect();
+
+    ui.set_products(Rc::new(slint::VecModel::from(filtered)).into());
+}
+
+/// Called from background threads — schedules filter application via event loop.
+pub fn apply_filter(products: Vec<ProductData>, data_dir: PathBuf, ui_handle: slint::Weak<Main>) {
     let _ = ui_handle.upgrade_in_event_loop(move |ui| {
-        let slint_products: Vec<ProductDetails> =
-            products.into_iter().map(|p| to_slint(p, &data_dir)).collect();
-        let model = Rc::new(slint::VecModel::from(slint_products));
-        ui.set_products(model.into());
+        apply_filter_on_ui_thread(&ui, &products, &data_dir);
     });
+}
+
+/// Update cache and re-render with current filter.
+pub fn refresh_ui(
+    products: Vec<ProductData>,
+    cache: ProductCache,
+    data_dir: PathBuf,
+    ui_handle: slint::Weak<Main>,
+) {
+    *cache.lock().unwrap() = products.clone();
+    apply_filter(products, data_dir, ui_handle);
 }
 
 pub async fn initial_sync(
@@ -62,6 +106,7 @@ pub async fn initial_sync(
     token: &str,
     pool: &SqlitePool,
     data_dir: &Path,
+    cache: ProductCache,
     ui_handle: slint::Weak<Main>,
 ) -> Result<(), SyncError> {
     eprintln!("[sync] initial_sync start");
@@ -77,7 +122,7 @@ pub async fn initial_sync(
     }
 
     let all = db::products::all(pool).await?;
-    refresh_ui(all, data_dir.to_path_buf(), ui_handle);
+    refresh_ui(all, cache, data_dir.to_path_buf(), ui_handle);
     eprintln!("[sync] initial_sync done ({} products)", products.len());
     Ok(())
 }
@@ -133,6 +178,7 @@ pub async fn listen_for_changes(
     token: String,
     pool: SqlitePool,
     data_dir: PathBuf,
+    cache: ProductCache,
     ui_handle: slint::Weak<Main>,
 ) {
     let url = format!("{base_url}/sync/stream");
@@ -161,6 +207,7 @@ pub async fn listen_for_changes(
                         &client,
                         &base_url,
                         &data_dir,
+                        cache.clone(),
                         ui_handle.clone(),
                     )
                     .await;
@@ -185,6 +232,7 @@ async fn handle_event(
     client: &Client,
     base_url: &str,
     data_dir: &Path,
+    cache: ProductCache,
     ui_handle: slint::Weak<Main>,
 ) {
     if event.contains("delete") {
@@ -192,7 +240,6 @@ async fn handle_event(
             let _ = db::products::delete(pool, p.id).await;
         }
     } else if let Ok(p) = serde_json::from_str::<ProductData>(json) {
-        // Only handle if it looks like a product (has a "name" field with non-empty value)
         if !p.name.is_empty() {
             let _ = db::products::upsert(pool, &p).await;
             if let Some(ref image_path) = p.image {
@@ -213,6 +260,6 @@ async fn handle_event(
     }
 
     if let Ok(all) = db::products::all(pool).await {
-        refresh_ui(all, data_dir.to_path_buf(), ui_handle);
+        refresh_ui(all, cache, data_dir.to_path_buf(), ui_handle);
     }
 }

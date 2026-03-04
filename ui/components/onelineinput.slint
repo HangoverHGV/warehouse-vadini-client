@@ -6,6 +6,7 @@ export component OneLineInput inherits Rectangle {
     in property <image> icon;
     in property <InputType> input-type: text;
     callback accepted();
+    callback edited(string);
 
     width: OneLineInputStyles.width;
     height: ButtonStyles.button-height;
@@ -33,7 +34,7 @@ export component OneLineInput inherits Rectangle {
         font-size: OneLineInputStyles.font-size;
     }
 
-    TextInput {
+    ti := TextInput {
         x: 10px + icon-offset;
         width: parent.width - 20px - icon-offset;
         height: parent.height;
@@ -42,6 +43,7 @@ export component OneLineInput inherits Rectangle {
         color: OneLineInputStyles.font-color;
         font-size: OneLineInputStyles.font-size;
         cursor-position-changed(position) => { }
+        edited => { root.edited(ti.text); }
         accepted => { root.accepted(); }
         input-type: root.input-type;
     }

@@ -1,7 +1,72 @@
 export enum ButtonType { Success, Danger, Default }
+
 export struct ProductDetails {
+    id: int,
     title: string,
     image: image,
     description: string,
     category: string,
-    price: string}
+    price: string,
+}
+
+export struct VariationDetails {
+    id: int,
+    dimensions: string,
+    packaging: string,
+    standard: string,
+    price: float,
+    price-total: string,
+    price-per-unit: string,
+}
+
+export struct ProductFull {
+    id: int,
+    name: string,
+    image: image,
+    category: string,
+    variations: [VariationDetails],
+    has-dimensions: bool,
+    has-packaging: bool,
+    has-standard: bool,
+}
+
+export struct CartItem {
+    variation-id: int,
+    product-name: string,
+    dimensions: string,
+    packaging: string,
+    standard: string,
+    price: float,
+    quantity: int,
+    item-discount: float,
+}
+
+export struct OrderItem {
+    variation-id: int,
+    product-name: string,
+    quantity: int,
+    item-discount: float,
+    price: float,
+    dimensions: string,
+    packaging: string,
+    standard: string,
+}
+
+export struct OrderData {
+    id: int,
+    client-name: string,
+    address-invoice: string,
+    address-delivery: string,
+    total: float,
+    discount: float,
+    created-at: string,
+    items: [OrderItem],
+}
+
+export struct UserData {
+    id: int,
+    username: string,
+    email: string,
+    is-active: bool,
+    is-superuser: bool,
+}

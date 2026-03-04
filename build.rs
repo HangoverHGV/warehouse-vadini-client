@@ -11,7 +11,7 @@ fn main() {
         .nth(3)
         .unwrap();
     let dest = binary_dir.join("config.json");
-    if !dest.exists() {
+    if !dest.exists() && std::path::Path::new("config.json").exists() {
         std::fs::copy("config.json", &dest)
             .expect("Failed to copy config.json to build directory");
     }

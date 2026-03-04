@@ -612,13 +612,18 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                             &client, &base_url, &token,
                             product_id as i64, &path_str,
                         ).await {
-                            Ok(p) => {
-                                let _ = db::products::upsert(&pool, &p).await;
-                                if let Ok(Some(p2)) = db::products::get_by_id(&pool, product_id as i64).await {
-                                    let _ = ui_weak.upgrade_in_event_loop(move |ui| {
-                                        let full = to_product_full(p2, &data_dir);
-                                        ui.set_selected_product(full);
-                                    });
+                            Ok(_) => {
+                                if let Ok(p) = api::products::fetch_one(&client, &base_url, &token, product_id as i64).await {
+                                    let _ = db::products::upsert(&pool, &p).await;
+                                    if let Some(ref img) = p.image {
+                                        let _ = images::ensure(&client, &base_url, &data_dir, img).await;
+                                    }
+                                    if let Ok(Some(p2)) = db::products::get_by_id(&pool, product_id as i64).await {
+                                        let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                                            let full = to_product_full(p2, &data_dir);
+                                            ui.set_selected_product(full);
+                                        });
+                                    }
                                 }
                             }
                             Err(e) => eprintln!("[main] change_product_image error: {e}"),

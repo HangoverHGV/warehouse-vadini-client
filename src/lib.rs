@@ -499,6 +499,9 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let rt_cp = rt.clone();
         let base_url_cp = base_url.clone();
         let shared_token_cp = shared_token.clone();
+        let pool_cp = pool.clone();
+        let data_dir_cp = data_dir.clone();
+        let cache_cp = cache.clone();
         let ui_weak = ui.as_weak();
         let model_cp = create_vars_model.clone();
         ui.on_create_product(move |name, category, desc, img_path| {
@@ -509,6 +512,9 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
             let client = (*client_cp).clone();
             let base_url = base_url_cp.clone();
             let rt = rt_cp.clone();
+            let pool = pool_cp.clone();
+            let data_dir = data_dir_cp.clone();
+            let cache = cache_cp.clone();
             let ui_weak = ui_weak.clone();
 
             let variations: Vec<models::product::NewVariationInput> = (0..model_cp.row_count())
@@ -533,8 +539,12 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
             std::thread::spawn(move || {
                 rt.block_on(async move {
                     match api::products::create(&client, &base_url, &token, &product).await {
-                        Ok(_) => {
-                            eprintln!("[main] product created");
+                        Ok(created) => {
+                            eprintln!("[main] product created id={}", created.id);
+                            let _ = db::products::upsert(&pool, &created).await;
+                            if let Ok(all) = db::products::all(&pool).await {
+                                sync::refresh_ui(all, cache, data_dir, ui_weak.clone());
+                            }
                             let _ = ui_weak.upgrade_in_event_loop(move |ui| {
                                 ui.set_create_image_path("".into());
                                 ui.invoke_clear_create_variations();

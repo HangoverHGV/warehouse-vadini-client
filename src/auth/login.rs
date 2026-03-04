@@ -27,7 +27,11 @@ pub async fn login(
 }
 
 /// Validates the stored token against /user/me.
-/// Returns the new token if the server rotated it, or Err if rejected.
+/// Returns the new token if the server rotated it.
+/// Returns `Err` only for network errors or a 401 Unauthorized response —
+/// the caller should clear the stored token only in those cases.
+/// Any other non-success status (500, 503, …) returns `Ok(Some(token))`
+/// so the caller keeps the token in config for the next run.
 pub async fn check_login(
     client: &Client,
     url: &str,
@@ -40,8 +44,14 @@ pub async fn check_login(
     eprintln!("[check_login] status: {status}");
     eprintln!("[check_login] body:   {body}");
 
-    if !status.is_success() {
+    if status == reqwest::StatusCode::UNAUTHORIZED {
         return Err(format!("Token rejected: {status}").into());
+    }
+
+    if !status.is_success() {
+        // Server-side error — not the token's fault; preserve it for next run.
+        eprintln!("[check_login] non-fatal server error ({status}), keeping token");
+        return Ok(Some(token.to_string()));
     }
 
     let new_token = serde_json::from_str::<LoginResponse>(&body)

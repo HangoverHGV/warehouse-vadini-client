@@ -39,10 +39,17 @@ impl Config {
         }
         #[cfg(not(target_os = "android"))]
         {
-            std::env::current_exe()
-                .ok()
-                .and_then(|p| p.parent().map(|p| p.join("data")))
-                .unwrap_or_else(|| PathBuf::from("data"))
+            if let Ok(data_home) = std::env::var("XDG_DATA_HOME") {
+                let p = PathBuf::from(data_home).join("warehouse-vadini");
+                let _ = fs::create_dir_all(&p);
+                return p;
+            }
+            if let Ok(home) = std::env::var("HOME") {
+                let p = PathBuf::from(home).join(".local/share/warehouse-vadini");
+                let _ = fs::create_dir_all(&p);
+                return p;
+            }
+            PathBuf::from("data")
         }
     }
 
@@ -56,6 +63,21 @@ impl Config {
         }
         #[cfg(not(target_os = "android"))]
         {
+            // 1. Try XDG_CONFIG_HOME
+            if let Ok(cfg_home) = std::env::var("XDG_CONFIG_HOME") {
+                let p = PathBuf::from(cfg_home).join("warehouse-vadini/config.json");
+                if p.exists() { return p; }
+            }
+            // 2. Try ~/.config
+            if let Ok(home) = std::env::var("HOME") {
+                let p = PathBuf::from(home).join(".config/warehouse-vadini/config.json");
+                if p.exists() { return p; }
+            }
+            // 3. Try /usr/share/warehouse-vadini (installed fallback)
+            let p = PathBuf::from("/usr/share/warehouse-vadini/config.json");
+            if p.exists() { return p; }
+
+            // 4. Local fallback
             std::env::current_exe()
                 .ok()
                 .and_then(|p| p.parent().map(|p| p.join("config.json")))

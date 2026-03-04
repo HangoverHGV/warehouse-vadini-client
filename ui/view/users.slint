@@ -17,14 +17,16 @@ export component UsersView inherits Rectangle {
     property <string> new-password: "";
     property <bool> new-is-superuser: false;
 
+    property <length> table-min-width: 780px;
+
     VerticalLayout {
         spacing: 0px;
 
-        // Top bar
+        // Top bar (full-width)
         Rectangle {
             height: 50px;
-            background: #f8f8f8;
-            border-color: #e0e0e0;
+            background: #ffffff;
+            border-color: #e2e8f0;
             border-width: 1px;
 
             HorizontalLayout {
@@ -60,11 +62,11 @@ export component UsersView inherits Rectangle {
             }
         }
 
-        // Create form
+        // Create form (full-width, collapsible)
         if root.show-create-form: Rectangle {
             height: 80px;
-            background: #eef6ff;
-            border-color: #90c4f9;
+            background: #eff6ff;
+            border-color: #bfdbfe;
             border-width: 1px;
 
             HorizontalLayout {
@@ -75,7 +77,7 @@ export component UsersView inherits Rectangle {
 
                 VerticalLayout {
                     alignment: center;
-                    Text { text: "Username:"; font-size: 12px; }
+                    Text { text: "Username:"; font-size: 12px; color: #475569; }
                     LineEdit {
                         width: 160px;
                         height: 34px;
@@ -85,7 +87,7 @@ export component UsersView inherits Rectangle {
                 }
                 VerticalLayout {
                     alignment: center;
-                    Text { text: "Email:"; font-size: 12px; }
+                    Text { text: "Email:"; font-size: 12px; color: #475569; }
                     LineEdit {
                         width: 180px;
                         height: 34px;
@@ -95,7 +97,7 @@ export component UsersView inherits Rectangle {
                 }
                 VerticalLayout {
                     alignment: center;
-                    Text { text: "Parola:"; font-size: 12px; }
+                    Text { text: "Parola:"; font-size: 12px; color: #475569; }
                     LineEdit {
                         width: 140px;
                         height: 34px;
@@ -135,31 +137,34 @@ export component UsersView inherits Rectangle {
             }
         }
 
-        // Table header
-        Rectangle {
-            height: 44px;
-            background: TableStyle.header-background;
-            border-color: TableStyle.border-color;
-            border-width: 1px;
-
-            HorizontalLayout {
-                padding-left: 10px;
-                padding-right: 10px;
-                spacing: 0px;
-                Text { width: 50px; text: "ID"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
-                Text { width: 200px; text: "Username"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
-                Text { width: 250px; text: "Email"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
-                Text { width: 80px; text: "Activ"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
-                Text { width: 80px; text: "Admin"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
-                Rectangle { horizontal-stretch: 1; }
-            }
-        }
-
-        // User rows
+        // Table — horizontally + vertically scrollable
         ScrollView {
             vertical-stretch: 1;
+            viewport-width: max(self.width, root.table-min-width);
 
             VerticalLayout {
+
+                // Table header
+                Rectangle {
+                    height: 44px;
+                    background: TableStyle.header-background;
+                    border-color: TableStyle.border-color;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 0px;
+                        Text { width: 50px;  text: "ID";       font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                        Text { width: 200px; text: "Username"; font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                        Text { width: 250px; text: "Email";    font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                        Text { width: 80px;  text: "Activ";   font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                        Text { width: 80px;  text: "Admin";   font-size: TableStyle.font-size; font-weight: 600; color: TableStyle.font-color; vertical-alignment: center; }
+                        Rectangle { horizontal-stretch: 1; }
+                    }
+                }
+
+                // User rows
                 for user[i] in users: Rectangle {
                     property <string> edit-name: user.name;
                     property <string> edit-email: user.email;
@@ -179,7 +184,7 @@ export component UsersView inherits Rectangle {
                         VerticalLayout {
                             width: 50px;
                             alignment: center;
-                            Text { text: "\{user.id}"; font-size: TableStyle.font-size; color: TableStyle.font-color; }
+                            Text { text: "\{user.id}"; font-size: TableStyle.font-size; color: TableStyle.font-color; font-weight: 600; }
                         }
 
                         Rectangle {
@@ -214,7 +219,8 @@ export component UsersView inherits Rectangle {
                             Text {
                                 text: user.is-active ? "Da" : "Nu";
                                 font-size: TableStyle.font-size;
-                                color: user.is-active ? #2e7d32 : #c62828;
+                                color: user.is-active ? #15803d : #dc2626;
+                                font-weight: 600;
                             }
                         }
                         VerticalLayout {
@@ -223,7 +229,8 @@ export component UsersView inherits Rectangle {
                             Text {
                                 text: user.is-superuser ? "Da" : "Nu";
                                 font-size: TableStyle.font-size;
-                                color: user.is-superuser ? #1565c0 : #666666;
+                                color: user.is-superuser ? #1d4ed8 : #64748b;
+                                font-weight: 600;
                             }
                         }
 

@@ -18,14 +18,17 @@ export component CartView inherits Rectangle {
     property <string> addr-delivery-val: "";
     property <float> discount-val: 0.0;
 
+    // Minimum table width (columns sum: 160+130+110+165+90+110+90 + action ~100)
+    property <length> table-min-width: 880px;
+
     VerticalLayout {
         spacing: 0px;
 
-        // Top bar (always visible)
+        // Top bar (full-width, no horizontal scroll)
         Rectangle {
             height: 50px;
-            background: #f8f8f8;
-            border-color: #e0e0e0;
+            background: #ffffff;
+            border-color: #e2e8f0;
             border-width: 1px;
 
             HorizontalLayout {
@@ -36,103 +39,93 @@ export component CartView inherits Rectangle {
                     CustomButton {
                         text: "< Catalog";
                         width: 110px;
-                        clicked => {
-                            root.go-back();
-                        }
+                        clicked => { root.go-back(); }
                     }
                 }
             }
         }
 
-        // Table header (always visible)
-        Rectangle {
-            height: 44px;
-            background: TableStyle.header-background;
-            border-color: TableStyle.border-color;
-            border-width: 1px;
-
-            HorizontalLayout {
-                padding-left: 10px;
-                padding-right: 10px;
-                spacing: 0px;
-
-                Text {
-                    width: 160px;
-                    text: "Produs";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Text {
-                    width: TableStyle.col-dimensions;
-                    text: "Dimensiune";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Text {
-                    width: TableStyle.col-packaging;
-                    text: "Ambalaj";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Text {
-                    width: TableStyle.col-standard;
-                    text: "Standard";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Text {
-                    width: 90px;
-                    text: "Pret";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Text {
-                    width: 110px;
-                    text: "Cantitate";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Text {
-                    width: 90px;
-                    text: "Discount";
-                    font-size: TableStyle.font-size;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    color: TableStyle.font-color;
-                }
-
-                Rectangle {
-                    horizontal-stretch: 1;
-                }
-            }
-        }
-
-        // Scrollable area: items + total + order form
+        // Table section — horizontally scrollable, vertically scrollable
         ScrollView {
             vertical-stretch: 1;
+            viewport-width: max(self.width, root.table-min-width);
 
             VerticalLayout {
                 spacing: 0px;
 
-                // Cart rows (no inner ScrollView needed)
+                // Table header
+                Rectangle {
+                    height: 44px;
+                    background: TableStyle.header-background;
+                    border-color: TableStyle.border-color;
+                    border-width: 1px;
+
+                    HorizontalLayout {
+                        padding-left: 10px;
+                        padding-right: 10px;
+                        spacing: 0px;
+
+                        Text {
+                            width: 160px;
+                            text: "Produs";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Text {
+                            width: TableStyle.col-dimensions;
+                            text: "Dimensiune";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Text {
+                            width: TableStyle.col-packaging;
+                            text: "Ambalaj";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Text {
+                            width: TableStyle.col-standard;
+                            text: "Standard";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Text {
+                            width: 90px;
+                            text: "Pret";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Text {
+                            width: 110px;
+                            text: "Cantitate";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Text {
+                            width: 90px;
+                            text: "Discount";
+                            font-size: TableStyle.font-size;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                            color: TableStyle.font-color;
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                    }
+                }
+
+                // Cart rows
                 for item[i] in cart-items: Rectangle {
                     height: TableStyle.row-height;
                     background: Math.mod(i, 2) == 0 ? TableStyle.row-even-background : TableStyle.row-odd-background;
@@ -152,7 +145,6 @@ export component CartView inherits Rectangle {
                             wrap: word-wrap;
                             color: TableStyle.font-color;
                         }
-
                         Text {
                             width: TableStyle.col-dimensions;
                             text: item.dimensions;
@@ -160,7 +152,6 @@ export component CartView inherits Rectangle {
                             vertical-alignment: center;
                             color: TableStyle.font-color;
                         }
-
                         Text {
                             width: TableStyle.col-packaging;
                             text: item.packaging;
@@ -168,7 +159,6 @@ export component CartView inherits Rectangle {
                             vertical-alignment: center;
                             color: TableStyle.font-color;
                         }
-
                         Text {
                             width: TableStyle.col-standard;
                             text: item.standard;
@@ -176,7 +166,6 @@ export component CartView inherits Rectangle {
                             vertical-alignment: center;
                             color: TableStyle.font-color;
                         }
-
                         Text {
                             width: 90px;
                             text: "\{item.price} RON";
@@ -195,8 +184,8 @@ export component CartView inherits Rectangle {
                                 Rectangle {
                                     width: 30px;
                                     height: 30px;
-                                    background: #e0e0e0;
-                                    border-radius: 4px;
+                                    background: #e2e8f0;
+                                    border-radius: 6px;
                                     Text {
                                         width: parent.width;
                                         height: parent.height;
@@ -206,7 +195,6 @@ export component CartView inherits Rectangle {
                                         font-size: 18px;
                                         color: TableStyle.font-color;
                                     }
-
                                     TouchArea {
                                         width: parent.width;
                                         height: parent.height;
@@ -220,7 +208,6 @@ export component CartView inherits Rectangle {
                                     }
                                 }
                             }
-
                             VerticalLayout {
                                 alignment: center;
                                 Text {
@@ -234,14 +221,13 @@ export component CartView inherits Rectangle {
                                     color: TableStyle.font-color;
                                 }
                             }
-
                             VerticalLayout {
                                 alignment: center;
                                 Rectangle {
                                     width: 30px;
                                     height: 30px;
-                                    background: #e0e0e0;
-                                    border-radius: 4px;
+                                    background: #e2e8f0;
+                                    border-radius: 6px;
                                     Text {
                                         width: parent.width;
                                         height: parent.height;
@@ -251,7 +237,6 @@ export component CartView inherits Rectangle {
                                         font-size: 18px;
                                         color: TableStyle.font-color;
                                     }
-
                                     TouchArea {
                                         width: parent.width;
                                         height: parent.height;
@@ -278,10 +263,8 @@ export component CartView inherits Rectangle {
                                 text: "Sterge";
                                 button-type: ButtonType.Danger;
                                 width: 90px;
-                                height: 36px;
-                                clicked => {
-                                    root.remove-from-cart(item.variation-id);
-                                }
+                                height: 34px;
+                                clicked => { root.remove-from-cart(item.variation-id); }
                             }
                         }
                     }
@@ -289,9 +272,9 @@ export component CartView inherits Rectangle {
 
                 // Total bar
                 Rectangle {
-                    height: 50px;
-                    background: #f0f0f0;
-                    border-color: #cccccc;
+                    height: 52px;
+                    background: #f0f7ff;
+                    border-color: #bfdbfe;
                     border-width: 1px;
 
                     HorizontalLayout {
@@ -302,28 +285,28 @@ export component CartView inherits Rectangle {
                             Text {
                                 text: "Total: \{cart-total}";
                                 font-size: 18px;
-                                font-weight: 600;
-                                color: #000000;
+                                font-weight: 700;
+                                color: #1e3a5f;
                             }
                         }
                     }
                 }
 
-                // Order form
+                // Order form (inside the scrollable area, but min-width applies)
                 Rectangle {
                     background: #ffffff;
-                    border-color: #e0e0e0;
+                    border-color: #e2e8f0;
                     border-width: 1px;
 
                     VerticalLayout {
-                        spacing: 12px;
+                        spacing: 14px;
                         padding: 20px;
 
                         Text {
                             text: "Date comanda";
                             font-size: 18px;
-                            font-weight: 600;
-                            color: #000000;
+                            font-weight: 700;
+                            color: #1e293b;
                         }
 
                         HorizontalLayout {
@@ -332,18 +315,15 @@ export component CartView inherits Rectangle {
                             Text {
                                 text: "Client:";
                                 width: 140px;
-                                font-size: 15px;
+                                font-size: 14px;
                                 vertical-alignment: center;
-                                color: #000000;
+                                color: #475569;
                             }
-
                             LineEdit {
                                 width: 320px;
-                                height: 44px;
+                                height: 42px;
                                 placeholder-text: "Nume client";
-                                edited(text) => {
-                                    root.client-name-val = text;
-                                }
+                                edited(text) => { root.client-name-val = text; }
                             }
                         }
 
@@ -353,18 +333,15 @@ export component CartView inherits Rectangle {
                             Text {
                                 text: "Adresa factura:";
                                 width: 140px;
-                                font-size: 15px;
+                                font-size: 14px;
                                 vertical-alignment: center;
-                                color: #000000;
+                                color: #475569;
                             }
-
                             LineEdit {
                                 width: 320px;
-                                height: 44px;
+                                height: 42px;
                                 placeholder-text: "Adresa facturare";
-                                edited(text) => {
-                                    root.addr-invoice-val = text;
-                                }
+                                edited(text) => { root.addr-invoice-val = text; }
                             }
                         }
 
@@ -374,18 +351,15 @@ export component CartView inherits Rectangle {
                             Text {
                                 text: "Adresa livrare:";
                                 width: 140px;
-                                font-size: 15px;
+                                font-size: 14px;
                                 vertical-alignment: center;
-                                color: #000000;
+                                color: #475569;
                             }
-
                             LineEdit {
                                 width: 320px;
-                                height: 44px;
+                                height: 42px;
                                 placeholder-text: "Adresa livrare";
-                                edited(text) => {
-                                    root.addr-delivery-val = text;
-                                }
+                                edited(text) => { root.addr-delivery-val = text; }
                             }
                         }
 
@@ -395,31 +369,27 @@ export component CartView inherits Rectangle {
                             Text {
                                 text: "Discount (%):";
                                 width: 140px;
-                                font-size: 15px;
+                                font-size: 14px;
                                 vertical-alignment: center;
-                                color: #000000;
+                                color: #475569;
                             }
-
                             LineEdit {
                                 width: 100px;
-                                height: 44px;
+                                height: 42px;
                                 placeholder-text: "0";
                                 input-type: number;
-                                edited(text) => {
-                                    root.discount-val = text.to-float();
-                                }
+                                edited(text) => { root.discount-val = text.to-float(); }
                             }
                         }
 
                         HorizontalLayout {
-                            spacing: 15px;
+                            spacing: 12px;
                             alignment: start;
-
                             CustomButton {
                                 text: "Trimite Comanda";
                                 button-type: ButtonType.Success;
                                 width: 180px;
-                                height: 48px;
+                                height: 46px;
                                 clicked => {
                                     root.send-order(
                                         root.client-name-val,
@@ -428,22 +398,16 @@ export component CartView inherits Rectangle {
                                         root.discount-val);
                                 }
                             }
-
                             CustomButton {
                                 text: "Goleste cosul";
                                 button-type: ButtonType.Danger;
                                 width: 150px;
-                                height: 48px;
-                                clicked => {
-                                    root.clear-cart();
-                                }
+                                height: 46px;
+                                clicked => { root.clear-cart(); }
                             }
                         }
 
-                        // Bottom padding so buttons aren't flush at the edge
-                        Rectangle {
-                            height: 20px;
-                        }
+                        Rectangle { height: 16px; }
                     }
                 }
             }

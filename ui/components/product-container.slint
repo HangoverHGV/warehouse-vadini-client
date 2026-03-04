@@ -9,37 +9,44 @@ export component ProductContainer inherits Rectangle {
 
     callback clicked();
 
-    background: ProductContainerStyles.background;
-    border-color: ProductContainerStyles.border-color;
+    background: touch.has-hover ? #f0f7ff : ProductContainerStyles.background;
+    border-color: touch.has-hover ? #93c5fd : ProductContainerStyles.border-color;
     border-width: 1px;
-    border-radius: 10px;
+    border-radius: 12px;
     width: ProductContainerStyles.width;
     height: ProductContainerStyles.height;
 
+    animate background { duration: 150ms; }
+    animate border-color { duration: 150ms; }
 
     VerticalLayout {
         alignment: start;
-        spacing: 2px;
-        HorizontalLayout {
-            padding-top: 10px;
-            x: 10px;
-            alignment: start;
-            spacing: 5px;
-            Rectangle {
-                width: ProductContainerStyles.category-width;
-                height: ProductContainerStyles.category-height;
-                background: ProductContainerStyles.category-background;
-                border-radius: ProductContainerStyles.category-border-radius;
-                Text {
-                    text: category;
-                    font-size: ProductContainerStyles.category-font-size;
-                    font-weight: ProductContainerStyles.category-font-weight;
-                    color: ProductContainerStyles.category-font-color;
-                }
+        spacing: 4px;
+        padding: 10px;
+
+        // Category badge
+        Rectangle {
+            width: ProductContainerStyles.category-width;
+            height: ProductContainerStyles.category-height;
+            background: ProductContainerStyles.category-background;
+            border-radius: ProductContainerStyles.category-border-radius;
+            Text {
+                width: parent.width;
+                height: parent.height;
+                text: category;
+                font-size: ProductContainerStyles.category-font-size;
+                font-weight: ProductContainerStyles.category-font-weight;
+                color: ProductContainerStyles.category-font-color;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                overflow: elide;
             }
         }
+
+        // Product image
         HorizontalLayout {
             alignment: center;
+            padding-top: 4px;
             Image {
                 width: ProductContainerStyles.image-width;
                 height: ProductContainerStyles.image-height;
@@ -47,44 +54,43 @@ export component ProductContainer inherits Rectangle {
                 image-fit: contain;
             }
         }
-        HorizontalLayout {
-            alignment: center;
-            Text {
-                text: title;
-                font-size: ProductContainerStyles.title-font-size;
-                font-weight: ProductContainerStyles.title-font-weight;
-                color: ProductContainerStyles.title-color;
-            }
-        }
-        HorizontalLayout {
-            alignment: center;
-            Text {
-                text: description;
-                vertical-alignment: top;
-                horizontal-alignment: center;
-                wrap: word-wrap;
-                font-size: ProductContainerStyles.font-size;
-                font-weight: ProductContainerStyles.font-weight;
-                color: ProductContainerStyles.font-color;
-            }
-        }
-        HorizontalLayout {
-            alignment: center;
-            Text {
-                text: price;
-                font-size: ProductContainerStyles.title-font-size;
-                font-weight: ProductContainerStyles.title-font-weight;
-                color: ProductContainerStyles.title-color;
-            }
+
+        // Title
+        Text {
+            text: title;
+            font-size: ProductContainerStyles.title-font-size;
+            font-weight: ProductContainerStyles.title-font-weight;
+            color: ProductContainerStyles.title-color;
+            horizontal-alignment: center;
+            wrap: word-wrap;
         }
 
+        // Description
+        Text {
+            text: description;
+            vertical-alignment: top;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+            font-size: ProductContainerStyles.font-size;
+            font-weight: ProductContainerStyles.font-weight;
+            color: ProductContainerStyles.font-color;
+            overflow: elide;
+        }
+
+        // Price
+        Text {
+            text: price;
+            font-size: ProductContainerStyles.title-font-size;
+            font-weight: ProductContainerStyles.title-font-weight;
+            color: #3b82f6;
+            horizontal-alignment: center;
+        }
     }
 
-    TouchArea {
+    touch := TouchArea {
         width: parent.width;
         height: parent.height;
         mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
-
 }

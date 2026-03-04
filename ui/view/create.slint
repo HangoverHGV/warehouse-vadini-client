@@ -20,14 +20,17 @@ export component CreateProductView inherits Rectangle {
     property <string> category-val: "";
     property <string> desc-val: "";
 
+    // Minimum width for the variations table
+    property <length> variations-min-width: 600px;
+
     VerticalLayout {
         spacing: 0px;
 
-        // Top bar
+        // Top bar (full-width)
         Rectangle {
             height: 50px;
-            background: #f8f8f8;
-            border-color: #e0e0e0;
+            background: #ffffff;
+            border-color: #e2e8f0;
             border-width: 1px;
 
             HorizontalLayout {
@@ -68,10 +71,10 @@ export component CreateProductView inherits Rectangle {
             VerticalLayout {
                 spacing: 0px;
 
-                // --- Product info section ---
+                // Product info section (responsive, no horizontal scroll needed)
                 Rectangle {
                     background: #ffffff;
-                    border-color: #e0e0e0;
+                    border-color: #e2e8f0;
                     border-width: 1px;
 
                     VerticalLayout {
@@ -81,16 +84,17 @@ export component CreateProductView inherits Rectangle {
                         Text {
                             text: "Creeaza Produs Nou";
                             font-size: 20px;
-                            font-weight: 600;
-                            color: #000000;
+                            font-weight: 700;
+                            color: #1e293b;
                         }
 
                         HorizontalLayout {
                             spacing: 10px;
                             alignment: start;
-                            Text { text: "Nume produs:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            Text { text: "Nume produs:"; width: 140px; font-size: 14px; vertical-alignment: center; color: #475569; }
                             LineEdit {
-                                width: 320px; height: 40px;
+                                width: min(320px, root.width - 200px);
+                                height: 40px;
                                 placeholder-text: "Nume produs";
                                 edited(t) => { root.name-val = t; }
                             }
@@ -99,9 +103,10 @@ export component CreateProductView inherits Rectangle {
                         HorizontalLayout {
                             spacing: 10px;
                             alignment: start;
-                            Text { text: "Categorie:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            Text { text: "Categorie:"; width: 140px; font-size: 14px; vertical-alignment: center; color: #475569; }
                             LineEdit {
-                                width: 320px; height: 40px;
+                                width: min(320px, root.width - 200px);
+                                height: 40px;
                                 placeholder-text: "Categorie";
                                 edited(t) => { root.category-val = t; }
                             }
@@ -110,12 +115,12 @@ export component CreateProductView inherits Rectangle {
                         HorizontalLayout {
                             spacing: 10px;
                             alignment: start;
-                            Text { text: "Descriere:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            Text { text: "Descriere:"; width: 140px; font-size: 14px; vertical-alignment: center; color: #475569; }
                             Rectangle {
-                                width: 320px;
+                                width: min(320px, root.width - 200px);
                                 height: 70px;
                                 background: #ffffff;
-                                border-color: #cccccc;
+                                border-color: #cbd5e1;
                                 border-width: 1px;
                                 border-radius: 4px;
                                 TextInput {
@@ -123,7 +128,7 @@ export component CreateProductView inherits Rectangle {
                                     width: parent.width - 16px;
                                     height: parent.height - 12px;
                                     font-size: 14px;
-                                    color: #000000;
+                                    color: #1e293b;
                                     wrap: word-wrap;
                                     text <=> root.desc-val;
                                 }
@@ -133,7 +138,7 @@ export component CreateProductView inherits Rectangle {
                         HorizontalLayout {
                             spacing: 10px;
                             alignment: start;
-                            Text { text: "Imagine:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            Text { text: "Imagine:"; width: 140px; font-size: 14px; vertical-alignment: center; color: #475569; }
                             VerticalLayout {
                                 alignment: center;
                                 spacing: 4px;
@@ -145,34 +150,34 @@ export component CreateProductView inherits Rectangle {
                                 Text {
                                     text: root.image-path == "" ? "Nicio imagine selectata" : root.image-path;
                                     font-size: 12px;
-                                    color: root.image-path == "" ? #888888 : #333333;
+                                    color: root.image-path == "" ? #94a3b8 : #475569;
                                     wrap: word-wrap;
-                                    width: 320px;
+                                    width: min(320px, root.width - 200px);
                                 }
                             }
                         }
                     }
                 }
 
-                // --- Variations section ---
+                // Variations section — horizontally scrollable for small screens
                 Rectangle {
-                    background: #f8f8f8;
-                    border-color: #e0e0e0;
+                    background: #f8fafc;
+                    border-color: #e2e8f0;
                     border-width: 1px;
 
                     VerticalLayout {
                         spacing: 0px;
                         padding: 16px;
 
-                        // Section header
+                        // Section header (full-width)
                         HorizontalLayout {
                             alignment: space-between;
                             spacing: 10px;
                             Text {
                                 text: "Variante";
                                 font-size: 16px;
-                                font-weight: 600;
-                                color: #333333;
+                                font-weight: 700;
+                                color: #1e293b;
                                 vertical-alignment: center;
                             }
                             CustomButton {
@@ -184,133 +189,139 @@ export component CreateProductView inherits Rectangle {
                             }
                         }
 
-                        // Column header
-                        Rectangle {
-                            height: 36px;
-                            background: #eeeeee;
-                            border-radius: 4px;
+                        // Scrollable table area
+                        ScrollView {
+                            viewport-width: max(self.width, root.variations-min-width);
 
-                            HorizontalLayout {
-                                padding-left: 8px;
-                                padding-right: 8px;
-                                spacing: 8px;
-                                Text { width: 140px; text: "Dimensiune"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
-                                Text { width: 120px; text: "Ambalaj"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
-                                Text { width: 180px; text: "Standard"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
-                                Text { width: 100px; text: "Pret (RON)"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
-                                Rectangle { horizontal-stretch: 1; }
+                            VerticalLayout {
+                                // Column header
+                                Rectangle {
+                                    height: 36px;
+                                    background: #e2e8f0;
+                                    border-radius: 4px;
+
+                                    HorizontalLayout {
+                                        padding-left: 8px;
+                                        padding-right: 8px;
+                                        spacing: 8px;
+                                        Text { width: 140px; text: "Dimensiune"; font-size: 13px; font-weight: 600; color: #475569; vertical-alignment: center; }
+                                        Text { width: 120px; text: "Ambalaj";    font-size: 13px; font-weight: 600; color: #475569; vertical-alignment: center; }
+                                        Text { width: 180px; text: "Standard";   font-size: 13px; font-weight: 600; color: #475569; vertical-alignment: center; }
+                                        Text { width: 100px; text: "Pret (RON)"; font-size: 13px; font-weight: 600; color: #475569; vertical-alignment: center; }
+                                        Rectangle { horizontal-stretch: 1; }
+                                    }
+                                }
+
+                                // Variation rows
+                                for item[i] in variation-list: Rectangle {
+                                    property <string> e-dims: item.dims;
+                                    property <string> e-pack: item.pack;
+                                    property <string> e-std: item.std;
+                                    property <string> e-price: item.price;
+
+                                    height: 48px;
+                                    background: Math.mod(i, 2) == 0 ? #ffffff : #f1f5f9;
+                                    border-color: #e2e8f0;
+                                    border-width: 1px;
+
+                                    HorizontalLayout {
+                                        padding-left: 8px;
+                                        padding-right: 8px;
+                                        spacing: 8px;
+                                        alignment: start;
+
+                                        Rectangle {
+                                            width: 140px; height: 32px;
+                                            background: #ffffff;
+                                            border-color: #cbd5e1;
+                                            border-width: 1px;
+                                            border-radius: 4px;
+                                            TextInput {
+                                                x: 6px; y: (parent.height - self.height) / 2;
+                                                width: parent.width - 12px;
+                                                vertical-alignment: center;
+                                                font-size: 13px;
+                                                color: #1e293b;
+                                                text <=> e-dims;
+                                                edited => {
+                                                    root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            width: 120px; height: 32px;
+                                            background: #ffffff;
+                                            border-color: #cbd5e1;
+                                            border-width: 1px;
+                                            border-radius: 4px;
+                                            TextInput {
+                                                x: 6px; y: (parent.height - self.height) / 2;
+                                                width: parent.width - 12px;
+                                                vertical-alignment: center;
+                                                font-size: 13px;
+                                                color: #1e293b;
+                                                text <=> e-pack;
+                                                edited => {
+                                                    root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            width: 180px; height: 32px;
+                                            background: #ffffff;
+                                            border-color: #cbd5e1;
+                                            border-width: 1px;
+                                            border-radius: 4px;
+                                            TextInput {
+                                                x: 6px; y: (parent.height - self.height) / 2;
+                                                width: parent.width - 12px;
+                                                vertical-alignment: center;
+                                                font-size: 13px;
+                                                color: #1e293b;
+                                                text <=> e-std;
+                                                edited => {
+                                                    root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            width: 100px; height: 32px;
+                                            background: #ffffff;
+                                            border-color: #cbd5e1;
+                                            border-width: 1px;
+                                            border-radius: 4px;
+                                            TextInput {
+                                                x: 6px; y: (parent.height - self.height) / 2;
+                                                width: parent.width - 12px;
+                                                vertical-alignment: center;
+                                                font-size: 13px;
+                                                color: #1e293b;
+                                                input-type: decimal;
+                                                text <=> e-price;
+                                                edited => {
+                                                    root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                                }
+                                            }
+                                        }
+
+                                        VerticalLayout {
+                                            alignment: center;
+                                            horizontal-stretch: 1;
+                                            CustomButton {
+                                                text: "Sterge";
+                                                button-type: ButtonType.Danger;
+                                                width: 80px;
+                                                height: 30px;
+                                                clicked => { root.remove-variation-row(i); }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-
-                        // Variation rows
-                        for item[i] in variation-list: Rectangle {
-                            property <string> e-dims: item.dims;
-                            property <string> e-pack: item.pack;
-                            property <string> e-std: item.std;
-                            property <string> e-price: item.price;
-
-                            height: 48px;
-                            background: Math.mod(i, 2) == 0 ? #ffffff : #f5f5f5;
-                            border-color: #dddddd;
-                            border-width: 1px;
-
-                            HorizontalLayout {
-                                padding-left: 8px;
-                                padding-right: 8px;
-                                spacing: 8px;
-                                alignment: start;
-
-                                Rectangle {
-                                    width: 140px; height: 32px;
-                                    background: #ffffff;
-                                    border-color: #cccccc;
-                                    border-width: 1px;
-                                    border-radius: 4px;
-                                    TextInput {
-                                        x: 6px; y: (parent.height - self.height) / 2;
-                                        width: parent.width - 12px;
-                                        vertical-alignment: center;
-                                        font-size: 13px;
-                                        color: #000000;
-                                        text <=> e-dims;
-                                        edited => {
-                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    width: 120px; height: 32px;
-                                    background: #ffffff;
-                                    border-color: #cccccc;
-                                    border-width: 1px;
-                                    border-radius: 4px;
-                                    TextInput {
-                                        x: 6px; y: (parent.height - self.height) / 2;
-                                        width: parent.width - 12px;
-                                        vertical-alignment: center;
-                                        font-size: 13px;
-                                        color: #000000;
-                                        text <=> e-pack;
-                                        edited => {
-                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    width: 180px; height: 32px;
-                                    background: #ffffff;
-                                    border-color: #cccccc;
-                                    border-width: 1px;
-                                    border-radius: 4px;
-                                    TextInput {
-                                        x: 6px; y: (parent.height - self.height) / 2;
-                                        width: parent.width - 12px;
-                                        vertical-alignment: center;
-                                        font-size: 13px;
-                                        color: #000000;
-                                        text <=> e-std;
-                                        edited => {
-                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    width: 100px; height: 32px;
-                                    background: #ffffff;
-                                    border-color: #cccccc;
-                                    border-width: 1px;
-                                    border-radius: 4px;
-                                    TextInput {
-                                        x: 6px; y: (parent.height - self.height) / 2;
-                                        width: parent.width - 12px;
-                                        vertical-alignment: center;
-                                        font-size: 13px;
-                                        color: #000000;
-                                        input-type: decimal;
-                                        text <=> e-price;
-                                        edited => {
-                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
-                                        }
-                                    }
-                                }
-
-                                VerticalLayout {
-                                    alignment: center;
-                                    horizontal-stretch: 1;
-                                    CustomButton {
-                                        text: "Sterge";
-                                        button-type: ButtonType.Danger;
-                                        width: 80px;
-                                        height: 30px;
-                                        clicked => { root.remove-variation-row(i); }
-                                    }
-                                }
-                            }
-                        }
-
                     }
                 }
             }

@@ -10,72 +10,103 @@ export component LoginView inherits Rectangle {
 
     background: LoginStyle.background;
 
+    // Responsive input width: at most 300px, but adapt to narrow screens
+    property <length> input-width: min(300px, root.width - 180px);
+    property <length> label-width: 120px;
+
     VerticalLayout {
-        spacing: 10px;
+        spacing: 16px;
         alignment: center;
 
-        HorizontalLayout {
-            alignment: center;
-            Text {
-                text: "Server URL: ";
-                font-size: LoginStyle.font-size;
-                color: LoginStyle.font-color;
-                font-weight: LoginStyle.font-weight;
-            }
+        // Card container
+        Rectangle {
+            background: #ffffff18;
+            border-radius: 16px;
+            border-color: #ffffff30;
+            border-width: 1px;
+            width: min(520px, root.width - 32px);
+            x: (root.width - self.width) / 2;
 
-            server-input := OneLineInput {
-                placeholder-text: "https://example.com";
-                width: 300px;
-                txt: root.server-url;
-                accepted => {
-                    root.login(self.txt, username-input.txt, password-input.txt);
+            VerticalLayout {
+                spacing: 18px;
+                padding: 32px;
+
+                // Title
+                Text {
+                    text: "Autentificare";
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #ffffff;
+                    horizontal-alignment: center;
                 }
-            }
-        }
 
-        HorizontalLayout {
-            alignment: center;
-            Text {
-                text: "Username: ";
-                font-size: LoginStyle.font-size;
-                color: LoginStyle.font-color;
-                font-weight: LoginStyle.font-weight;
-            }
-
-            username-input := OneLineInput {
-                placeholder-text: "username";
-                width: 300px;
-                accepted => {
-                    root.login(server-input.txt, self.txt, password-input.txt);
+                // Server URL field
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Server URL";
+                        font-size: LoginStyle.font-size;
+                        color: #cbd5e1;
+                        font-weight: 500;
+                    }
+                    server-input := OneLineInput {
+                        placeholder-text: "https://example.com";
+                        width: parent.width;
+                        txt: root.server-url;
+                        accepted => {
+                            root.login(self.txt, username-input.txt, password-input.txt);
+                        }
+                    }
                 }
-            }
-        }
 
-        HorizontalLayout {
-            alignment: center;
-            Text {
-                text: "Password: ";
-                font-size: LoginStyle.font-size;
-                color: LoginStyle.font-color;
-                font-weight: LoginStyle.font-weight;
-            }
-
-            password-input := OneLineInput {
-                placeholder-text: "password";
-                input-type: password;
-                width: 300px;
-                accepted => {
-                    root.login(server-input.txt, username-input.txt, self.txt);
+                // Username field
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Username";
+                        font-size: LoginStyle.font-size;
+                        color: #cbd5e1;
+                        font-weight: 500;
+                    }
+                    username-input := OneLineInput {
+                        placeholder-text: "username";
+                        width: parent.width;
+                        accepted => {
+                            root.login(server-input.txt, self.txt, password-input.txt);
+                        }
+                    }
                 }
-            }
-        }
 
-        HorizontalLayout {
-            alignment: center;
-            CustomButton {
-                text: "Log in";
-                clicked => {
-                    root.login(server-input.txt, username-input.txt, password-input.txt);
+                // Password field
+                VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Parola";
+                        font-size: LoginStyle.font-size;
+                        color: #cbd5e1;
+                        font-weight: 500;
+                    }
+                    password-input := OneLineInput {
+                        placeholder-text: "parola";
+                        input-type: password;
+                        width: parent.width;
+                        accepted => {
+                            root.login(server-input.txt, username-input.txt, self.txt);
+                        }
+                    }
+                }
+
+                // Login button
+                HorizontalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "Log in";
+                        width: 180px;
+                        height: 44px;
+                        clicked => {
+                            root.login(server-input.txt, username-input.txt, password-input.txt);
+                        }
+                    }
                 }
             }
         }

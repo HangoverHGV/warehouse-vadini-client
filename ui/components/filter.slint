@@ -6,7 +6,7 @@ export component Filter inherits Rectangle {
     in property <[string]> categories: ["Tot"];
     callback category-selected(string);
 
-    width: FilterStyles.width;
+    horizontal-stretch: 1;
     height: FilterStyles.height;
     background: FilterStyles.background;
     border-color: FilterStyles.border-color;
@@ -17,7 +17,7 @@ export component Filter inherits Rectangle {
 
     HorizontalLayout {
         spacing: root.spacing;
-        padding-left: 10px;
+        padding-left: 14px;
         padding-top: root.height / 2 - bydropdown.height / 2;
         alignment: start;
 
@@ -29,7 +29,7 @@ export component Filter inherits Rectangle {
         }
 
         bydropdown := CustomDropdown {
-            width: 140px;
+            width: 160px;
             model: categories;
             current-value: categories[0];
             background: root.background;

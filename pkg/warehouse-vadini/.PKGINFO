@@ -6,9 +6,9 @@ xdata = pkgtype=pkg
 pkgver = 0.1.0-1
 pkgdesc = Warehouse management client for Vadini
 url = https://warehouse.sudurasimontaj.com
-builddate = 1772663895
+builddate = 1772665433
 packager = Unknown Packager
-size = 36571502
+size = 34843086
 arch = x86_64
 license = custom
 depend = gcc-libs

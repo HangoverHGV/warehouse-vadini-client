@@ -20,12 +20,16 @@ export component LoginView inherits Rectangle {
                 color: LoginStyle.font-color;
                 font-weight: LoginStyle.font-weight;
             }
+
             username-input := OneLineInput {
                 placeholder-text: "username";
                 width: 300px;
-                accepted => { root.login(username-input.txt, password-input.txt); }
+                accepted => {
+                    root.login(username-input.txt, password-input.txt);
+                }
             }
         }
+
         HorizontalLayout {
             alignment: center;
             Text {
@@ -34,18 +38,24 @@ export component LoginView inherits Rectangle {
                 color: LoginStyle.font-color;
                 font-weight: LoginStyle.font-weight;
             }
+
             password-input := OneLineInput {
                 placeholder-text: "password";
                 input-type: password;
                 width: 300px;
-                accepted => { root.login(username-input.txt, password-input.txt); }
+                accepted => {
+                    root.login(username-input.txt, password-input.txt);
+                }
             }
         }
+
         HorizontalLayout {
             alignment: center;
             CustomButton {
                 text: "Log in";
-                clicked => { root.login(username-input.txt, password-input.txt); }
+                clicked => {
+                    root.login(username-input.txt, password-input.txt);
+                }
             }
         }
     }

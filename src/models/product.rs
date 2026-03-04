@@ -44,13 +44,30 @@ pub struct NewVariationPayload {
     pub price: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dimensions: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub packaging: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub standard: Option<String>,
 }
 
-/// Used to queue a new product for offline creation.
+/// A single variation to be created with a new product.
+#[derive(Debug, Clone)]
+pub struct NewVariationInput {
+    pub dimensions: Option<String>,
+    pub packaging: Option<String>,
+    pub standard: Option<String>,
+    pub description: Option<String>,
+    pub price: f64,
+}
+
+/// Used to create a new product (possibly with multiple variations).
 #[derive(Debug, Clone)]
 pub struct NewProduct {
     pub name: String,
     pub category: String,
-    pub price: f64,
     pub description: Option<String>,
+    pub image_path: Option<String>,
+    pub variations: Vec<NewVariationInput>,
 }

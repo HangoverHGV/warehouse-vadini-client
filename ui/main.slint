@@ -9,7 +9,7 @@ import { CartView } from "view/cart.slint";
 import { OrdersView } from "view/orders.slint";
 import { UsersView } from "view/users.slint";
 import { CreateProductView } from "view/create.slint";
-import { ProductDetails, ProductFull, CartItem, OrderData, UserData } from "types.slint";
+import { ProductDetails, ProductFull, CartItem, OrderData, UserData, VariationInput } from "types.slint";
 
 export component Main inherits Window {
     in-out property <bool> logged: false;
@@ -26,6 +26,8 @@ export component Main inherits Window {
     in-out property <string> cart-total: "0.00 RON";
     in-out property <[OrderData]> orders;
     in-out property <[UserData]> users;
+    in-out property <string> create-image-path: "";
+    in-out property <[VariationInput]> create-variations;
 
     callback login(string, string);
     callback open-product(int);
@@ -37,13 +39,24 @@ export component Main inherits Window {
     callback send-order(string, string, string, float);
     callback clear-cart();
     // Product admin
-    callback create-product(string, string, float);
+    // name, category, description, image-path
+    callback create-product(string, string, string, string);
+    callback select-image-create();
+    callback add-variation-row();
+    callback remove-variation-row(int);
+    // index, dims, pack, std, price
+    callback variation-field-changed(int, string, string, string, string);
+    callback clear-create-variations();
     callback delete-product(int);
-    callback update-variation(int, int, string, string, string, float);
+    // product-id, variation-id, dims, pack, std, description, price
+    callback update-variation(int, int, string, string, string, string, float);
     callback delete-variation(int, int);
-    callback add-variation(int, string, string, string, float);
+    // product-id, dims, pack, std, description, price
+    callback add-variation(int, string, string, string, string, float);
+    callback change-product-image(int);
     // Orders
     callback load-orders();
+    callback download-catalog-pdf();
     // Users
     callback load-users();
     callback create-user(string, string, string, bool, bool);
@@ -78,6 +91,7 @@ export component Main inherits Window {
                 root.load-users();
             }
             search-changed(q) => { root.search(q); }
+            download-catalog-pdf => { root.download-catalog-pdf(); }
         }
 
         if current-view == 0: VerticalLayout {
@@ -103,17 +117,20 @@ export component Main inherits Window {
             is-admin: root.is-admin;
             go-back => { root.current-view = 0; }
             add-to-cart(vid) => { root.add-to-cart(vid); }
-            update-variation(vid, d, pk, st, pr) => {
-                root.update-variation(root.selected-product.id, vid, d, pk, st, pr);
+            update-variation(vid, d, pk, st, desc, pr) => {
+                root.update-variation(root.selected-product.id, vid, d, pk, st, desc, pr);
             }
             delete-variation(vid) => {
                 root.delete-variation(root.selected-product.id, vid);
             }
-            add-variation(d, pk, st, pr) => {
-                root.add-variation(root.selected-product.id, d, pk, st, pr);
+            add-variation(d, pk, st, desc, pr) => {
+                root.add-variation(root.selected-product.id, d, pk, st, desc, pr);
             }
             delete-product => {
                 root.delete-product(root.selected-product.id);
+            }
+            change-product-image => {
+                root.change-product-image(root.selected-product.id);
             }
         }
 
@@ -143,8 +160,18 @@ export component Main inherits Window {
         }
 
         if current-view == 5: CreateProductView {
+            image-path <=> root.create-image-path;
+            variation-list <=> root.create-variations;
             go-back => { root.current-view = 0; }
-            create-product(n, c, p) => { root.create-product(n, c, p); }
+            select-image => { root.select-image-create(); }
+            add-variation-row => { root.add-variation-row(); }
+            remove-variation-row(i) => { root.remove-variation-row(i); }
+            variation-field-changed(i, d, pk, st, pr) => {
+                root.variation-field-changed(i, d, pk, st, pr);
+            }
+            create-product(n, c, desc, img) => {
+                root.create-product(n, c, desc, img);
+            }
         }
     }
 }

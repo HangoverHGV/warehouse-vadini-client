@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
-use crate::models::product::{NewProduct, ProductData};
+use crate::models::product::{NewProduct, NewVariationInput, ProductData};
 use crate::{api, db, images, Main, ProductDetails};
 
 type SyncError = Box<dyn std::error::Error + Send + Sync>;
@@ -144,8 +144,15 @@ pub async fn push_pending(
         let new_product = NewProduct {
             name: p.name.clone(),
             category: p.category.clone(),
-            price: p.price,
             description: p.description.clone(),
+            image_path: None,
+            variations: vec![NewVariationInput {
+                dimensions: None,
+                packaging: None,
+                standard: None,
+                description: p.description.clone(),
+                price: p.price,
+            }],
         };
 
         match api::products::create(client, base_url, token, &new_product).await {

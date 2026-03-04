@@ -1,19 +1,29 @@
 import { ScrollView, LineEdit } from "std-widgets.slint";
-import { ButtonStyles } from "../style/defaults.slint";
+import { TableStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
-import { ButtonType } from "../types.slint";
+import { ButtonType, VariationInput } from "../types.slint";
 
 export component CreateProductView inherits Rectangle {
     callback go-back();
-    callback create-product(string, string, float);
+    // name, category, description, image-path
+    callback create-product(string, string, string, string);
+    callback select-image();
+    callback add-variation-row();
+    callback remove-variation-row(int);
+    // index, dims, pack, std, price
+    callback variation-field-changed(int, string, string, string, string);
+
+    in-out property <string> image-path: "";
+    in-out property <[VariationInput]> variation-list;
 
     property <string> name-val: "";
     property <string> category-val: "";
-    property <string> price-val: "";
+    property <string> desc-val: "";
 
     VerticalLayout {
         spacing: 0px;
 
+        // Top bar
         Rectangle {
             height: 50px;
             background: #f8f8f8;
@@ -22,7 +32,9 @@ export component CreateProductView inherits Rectangle {
 
             HorizontalLayout {
                 padding-left: 10px;
+                padding-right: 10px;
                 alignment: start;
+                spacing: 10px;
                 VerticalLayout {
                     alignment: center;
                     CustomButton {
@@ -31,94 +43,274 @@ export component CreateProductView inherits Rectangle {
                         clicked => { root.go-back(); }
                     }
                 }
-            }
-        }
-
-        Rectangle {
-            background: #ffffff;
-            border-color: #e0e0e0;
-            border-width: 1px;
-
-            VerticalLayout {
-                spacing: 16px;
-                padding: 30px;
-
-                Text {
-                    text: "Creeaza Produs Nou";
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: #000000;
-                }
-
-                HorizontalLayout {
-                    spacing: 10px;
-                    alignment: start;
-                    Text {
-                        text: "Nume produs:";
-                        width: 160px;
-                        font-size: 15px;
-                        vertical-alignment: center;
-                        color: #000000;
-                    }
-                    LineEdit {
-                        width: 320px;
-                        height: 44px;
-                        placeholder-text: "Nume produs";
-                        edited(t) => { root.name-val = t; }
-                    }
-                }
-
-                HorizontalLayout {
-                    spacing: 10px;
-                    alignment: start;
-                    Text {
-                        text: "Categorie:";
-                        width: 160px;
-                        font-size: 15px;
-                        vertical-alignment: center;
-                        color: #000000;
-                    }
-                    LineEdit {
-                        width: 320px;
-                        height: 44px;
-                        placeholder-text: "Categorie";
-                        edited(t) => { root.category-val = t; }
-                    }
-                }
-
-                HorizontalLayout {
-                    spacing: 10px;
-                    alignment: start;
-                    Text {
-                        text: "Pret initial (RON):";
-                        width: 160px;
-                        font-size: 15px;
-                        vertical-alignment: center;
-                        color: #000000;
-                    }
-                    LineEdit {
-                        width: 160px;
-                        height: 44px;
-                        placeholder-text: "0.00";
-                        input-type: decimal;
-                        edited(t) => { root.price-val = t; }
-                    }
-                }
-
-                HorizontalLayout {
-                    alignment: start;
+                VerticalLayout {
+                    alignment: center;
                     CustomButton {
-                        text: "Creeaza";
+                        text: "Creeaza Produs";
                         button-type: ButtonType.Success;
-                        width: 140px;
-                        height: 48px;
+                        width: 160px;
                         clicked => {
                             root.create-product(
                                 root.name-val,
                                 root.category-val,
-                                root.price-val.to-float()
+                                root.desc-val,
+                                root.image-path
                             );
                         }
+                    }
+                }
+            }
+        }
+
+        ScrollView {
+            vertical-stretch: 1;
+
+            VerticalLayout {
+                spacing: 0px;
+
+                // --- Product info section ---
+                Rectangle {
+                    background: #ffffff;
+                    border-color: #e0e0e0;
+                    border-width: 1px;
+
+                    VerticalLayout {
+                        spacing: 16px;
+                        padding: 24px;
+
+                        Text {
+                            text: "Creeaza Produs Nou";
+                            font-size: 20px;
+                            font-weight: 600;
+                            color: #000000;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text { text: "Nume produs:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            LineEdit {
+                                width: 320px; height: 40px;
+                                placeholder-text: "Nume produs";
+                                edited(t) => { root.name-val = t; }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text { text: "Categorie:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            LineEdit {
+                                width: 320px; height: 40px;
+                                placeholder-text: "Categorie";
+                                edited(t) => { root.category-val = t; }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text { text: "Descriere:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            Rectangle {
+                                width: 320px;
+                                height: 70px;
+                                background: #ffffff;
+                                border-color: #cccccc;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 8px; y: 6px;
+                                    width: parent.width - 16px;
+                                    height: parent.height - 12px;
+                                    font-size: 14px;
+                                    color: #000000;
+                                    wrap: word-wrap;
+                                    text <=> root.desc-val;
+                                }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text { text: "Imagine:"; width: 160px; font-size: 15px; vertical-alignment: center; color: #000000; }
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 4px;
+                                CustomButton {
+                                    text: "Alege imagine";
+                                    width: 140px;
+                                    clicked => { root.select-image(); }
+                                }
+                                Text {
+                                    text: root.image-path == "" ? "Nicio imagine selectata" : root.image-path;
+                                    font-size: 12px;
+                                    color: root.image-path == "" ? #888888 : #333333;
+                                    wrap: word-wrap;
+                                    width: 320px;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- Variations section ---
+                Rectangle {
+                    background: #f8f8f8;
+                    border-color: #e0e0e0;
+                    border-width: 1px;
+
+                    VerticalLayout {
+                        spacing: 0px;
+                        padding: 16px;
+
+                        // Section header
+                        HorizontalLayout {
+                            alignment: space-between;
+                            spacing: 10px;
+                            Text {
+                                text: "Variante";
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: #333333;
+                                vertical-alignment: center;
+                            }
+                            CustomButton {
+                                text: "+ Adauga varianta";
+                                button-type: ButtonType.Success;
+                                width: 160px;
+                                height: 34px;
+                                clicked => { root.add-variation-row(); }
+                            }
+                        }
+
+                        // Column header
+                        Rectangle {
+                            height: 36px;
+                            background: #eeeeee;
+                            border-radius: 4px;
+
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                padding-right: 8px;
+                                spacing: 8px;
+                                Text { width: 140px; text: "Dimensiune"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
+                                Text { width: 120px; text: "Ambalaj"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
+                                Text { width: 180px; text: "Standard"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
+                                Text { width: 100px; text: "Pret (RON)"; font-size: 13px; font-weight: 600; color: #555555; vertical-alignment: center; }
+                                Rectangle { horizontal-stretch: 1; }
+                            }
+                        }
+
+                        // Variation rows
+                        for item[i] in variation-list: Rectangle {
+                            property <string> e-dims: item.dims;
+                            property <string> e-pack: item.pack;
+                            property <string> e-std: item.std;
+                            property <string> e-price: item.price;
+
+                            height: 48px;
+                            background: Math.mod(i, 2) == 0 ? #ffffff : #f5f5f5;
+                            border-color: #dddddd;
+                            border-width: 1px;
+
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                padding-right: 8px;
+                                spacing: 8px;
+                                alignment: start;
+
+                                Rectangle {
+                                    width: 140px; height: 32px;
+                                    background: #ffffff;
+                                    border-color: #cccccc;
+                                    border-width: 1px;
+                                    border-radius: 4px;
+                                    TextInput {
+                                        x: 6px; y: (parent.height - self.height) / 2;
+                                        width: parent.width - 12px;
+                                        vertical-alignment: center;
+                                        font-size: 13px;
+                                        color: #000000;
+                                        text <=> e-dims;
+                                        edited => {
+                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 120px; height: 32px;
+                                    background: #ffffff;
+                                    border-color: #cccccc;
+                                    border-width: 1px;
+                                    border-radius: 4px;
+                                    TextInput {
+                                        x: 6px; y: (parent.height - self.height) / 2;
+                                        width: parent.width - 12px;
+                                        vertical-alignment: center;
+                                        font-size: 13px;
+                                        color: #000000;
+                                        text <=> e-pack;
+                                        edited => {
+                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 180px; height: 32px;
+                                    background: #ffffff;
+                                    border-color: #cccccc;
+                                    border-width: 1px;
+                                    border-radius: 4px;
+                                    TextInput {
+                                        x: 6px; y: (parent.height - self.height) / 2;
+                                        width: parent.width - 12px;
+                                        vertical-alignment: center;
+                                        font-size: 13px;
+                                        color: #000000;
+                                        text <=> e-std;
+                                        edited => {
+                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 100px; height: 32px;
+                                    background: #ffffff;
+                                    border-color: #cccccc;
+                                    border-width: 1px;
+                                    border-radius: 4px;
+                                    TextInput {
+                                        x: 6px; y: (parent.height - self.height) / 2;
+                                        width: parent.width - 12px;
+                                        vertical-alignment: center;
+                                        font-size: 13px;
+                                        color: #000000;
+                                        input-type: decimal;
+                                        text <=> e-price;
+                                        edited => {
+                                            root.variation-field-changed(i, e-dims, e-pack, e-std, e-price);
+                                        }
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    horizontal-stretch: 1;
+                                    CustomButton {
+                                        text: "Sterge";
+                                        button-type: ButtonType.Danger;
+                                        width: 80px;
+                                        height: 30px;
+                                        clicked => { root.remove-variation-row(i); }
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
             }

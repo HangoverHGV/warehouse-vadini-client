@@ -161,7 +161,7 @@ export component UsersView inherits Rectangle {
 
             VerticalLayout {
                 for user[i] in users: Rectangle {
-                    property <string> edit-username: user.username;
+                    property <string> edit-name: user.name;
                     property <string> edit-email: user.email;
                     property <bool> edit-active: user.is-active;
                     property <bool> edit-super: user.is-superuser;
@@ -191,7 +191,7 @@ export component UsersView inherits Rectangle {
                                 vertical-alignment: center;
                                 font-size: TableStyle.font-size;
                                 color: TableStyle.font-color;
-                                text <=> edit-username;
+                                text <=> edit-name;
                             }
                         }
 
@@ -241,7 +241,7 @@ export component UsersView inherits Rectangle {
                                     clicked => {
                                         root.update-user(
                                             user.id,
-                                            edit-username, edit-email,
+                                            edit-name, edit-email,
                                             edit-active, edit-super
                                         );
                                     }

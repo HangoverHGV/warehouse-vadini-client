@@ -6,16 +6,17 @@ type ApiError = Box<dyn std::error::Error + Send + Sync>;
 #[derive(Deserialize, Debug, Clone)]
 pub struct UserData {
     pub id: i64,
-    pub username: String,
+    pub name: String,
     #[serde(default)]
     pub email: String,
     pub is_active: bool,
+    #[serde(default)]
     pub is_superuser: bool,
 }
 
 #[derive(Serialize, Debug, Clone)]
 pub struct CreateUser {
-    pub username: String,
+    pub name: String,
     pub email: String,
     pub password: String,
     pub is_active: bool,
@@ -24,7 +25,7 @@ pub struct CreateUser {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct UpdateUser {
-    pub username: String,
+    pub name: String,
     pub email: String,
     pub is_active: bool,
     pub is_superuser: bool,

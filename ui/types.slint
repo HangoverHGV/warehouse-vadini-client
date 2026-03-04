@@ -1,5 +1,12 @@
 export enum ButtonType { Success, Danger, Default }
 
+export struct VariationInput {
+    dims: string,
+    pack: string,
+    std: string,
+    price: string,
+}
+
 export struct ProductDetails {
     id: int,
     title: string,
@@ -14,6 +21,7 @@ export struct VariationDetails {
     dimensions: string,
     packaging: string,
     standard: string,
+    description: string,
     price: float,
     price-total: string,
     price-per-unit: string,
@@ -65,7 +73,7 @@ export struct OrderData {
 
 export struct UserData {
     id: int,
-    username: string,
+    name: string,
     email: string,
     is-active: bool,
     is-superuser: bool,

@@ -14,6 +14,7 @@ export component NavBar inherits Rectangle {
     callback go-orders();
     callback go-users();
     callback search-changed(string);
+    callback download-catalog-pdf();
 
     width: NavbarStyle.width;
     height: NavbarStyle.height;
@@ -44,6 +45,11 @@ export component NavBar inherits Rectangle {
             if is-admin: CustomButton {
                 text: "Utilizatori";
                 clicked => { root.go-users(); }
+            }
+
+            if is-admin: CustomButton {
+                text: "Catalog PDF";
+                clicked => { root.download-catalog-pdf(); }
             }
 
             OneLineInput {

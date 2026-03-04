@@ -10,15 +10,19 @@ export component ProductDetail inherits Rectangle {
 
     callback go-back();
     callback add-to-cart(int);
-    callback update-variation(int, string, string, string, float);
+    // variation-id, dims, pack, std, description, price
+    callback update-variation(int, string, string, string, string, float);
     callback delete-variation(int);
-    callback add-variation(string, string, string, float);
+    // dims, pack, std, description, price
+    callback add-variation(string, string, string, string, float);
     callback delete-product();
+    callback change-product-image();
 
     property <bool> show-add-form: false;
     property <string> new-dims: "";
     property <string> new-pack: "";
     property <string> new-std: "";
+    property <string> new-desc: "";
     property <string> new-price-str: "";
 
     VerticalLayout {
@@ -68,18 +72,28 @@ export component ProductDetail inherits Rectangle {
                 padding: 20px;
                 alignment: start;
 
-                Rectangle {
-                    width: DetailStyle.image-width;
-                    height: DetailStyle.image-height;
-                    border-color: #eeeeee;
-                    border-width: 1px;
-                    border-radius: 8px;
-                    clip: true;
-                    Image {
-                        width: parent.width;
-                        height: parent.height;
-                        source: product.image;
-                        image-fit: contain;
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 6px;
+                    Rectangle {
+                        width: DetailStyle.image-width;
+                        height: DetailStyle.image-height;
+                        border-color: #eeeeee;
+                        border-width: 1px;
+                        border-radius: 8px;
+                        clip: true;
+                        Image {
+                            width: parent.width;
+                            height: parent.height;
+                            source: product.image;
+                            image-fit: contain;
+                        }
+                    }
+                    if root.is-admin: CustomButton {
+                        text: "Schimba imagine";
+                        width: DetailStyle.image-width;
+                        height: 30px;
+                        clicked => { root.change-product-image(); }
                     }
                 }
 
@@ -122,7 +136,7 @@ export component ProductDetail inherits Rectangle {
             HorizontalLayout {
                 padding-left: 10px;
                 padding-right: 10px;
-                spacing: 0px;
+                spacing: 10px;
 
                 if product.has-dimensions: Text {
                     width: TableStyle.col-dimensions;
@@ -149,16 +163,16 @@ export component ProductDetail inherits Rectangle {
                     vertical-alignment: center;
                 }
                 Text {
-                    width: TableStyle.col-price-unit;
-                    text: "Pret/unitate";
+                    width: TableStyle.col-description;
+                    text: "Descriere";
                     font-size: TableStyle.font-size;
                     font-weight: 600;
                     color: DetailStyle.font-color;
                     vertical-alignment: center;
                 }
                 Text {
-                    width: TableStyle.col-price-total;
-                    text: "Pret total";
+                    width: TableStyle.col-price-unit;
+                    text: "Pret/unitate";
                     font-size: TableStyle.font-size;
                     font-weight: 600;
                     color: DetailStyle.font-color;
@@ -177,9 +191,10 @@ export component ProductDetail inherits Rectangle {
                     property <string> edit-dims: variation.dimensions;
                     property <string> edit-pack: variation.packaging;
                     property <string> edit-std: variation.standard;
+                    property <string> edit-desc: variation.description;
                     property <string> edit-price: "\{variation.price}";
 
-                    height: root.is-admin ? 90px : TableStyle.row-height;
+                    height: root.is-admin ? 110px : TableStyle.row-height;
                     background: Math.mod(i, 2) == 0 ? TableStyle.row-even-background : TableStyle.row-odd-background;
                     border-color: TableStyle.border-color;
                     border-width: 1px;
@@ -187,7 +202,7 @@ export component ProductDetail inherits Rectangle {
                     HorizontalLayout {
                         padding-left: 10px;
                         padding-right: 10px;
-                        spacing: 0px;
+                        spacing: 10px;
 
                         if product.has-dimensions && !root.is-admin: Text {
                             width: TableStyle.col-dimensions;
@@ -197,16 +212,23 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                             wrap: word-wrap;
                         }
-                        if product.has-dimensions && root.is-admin: Rectangle {
+                        if product.has-dimensions && root.is-admin: VerticalLayout {
                             width: TableStyle.col-dimensions;
-                            height: parent.height;
-                            TextInput {
-                                x: 4px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 8px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                color: DetailStyle.font-color;
-                                text <=> edit-dims;
+                            alignment: center;
+                            Rectangle {
+                                height: 30px;
+                                background: #ffffff;
+                                border-color: #cccccc;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: DetailStyle.font-color;
+                                    text <=> edit-dims;
+                                }
                             }
                         }
 
@@ -218,16 +240,23 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                             wrap: word-wrap;
                         }
-                        if product.has-packaging && root.is-admin: Rectangle {
+                        if product.has-packaging && root.is-admin: VerticalLayout {
                             width: TableStyle.col-packaging;
-                            height: parent.height;
-                            TextInput {
-                                x: 4px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 8px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                color: DetailStyle.font-color;
-                                text <=> edit-pack;
+                            alignment: center;
+                            Rectangle {
+                                height: 30px;
+                                background: #ffffff;
+                                border-color: #cccccc;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: DetailStyle.font-color;
+                                    text <=> edit-pack;
+                                }
                             }
                         }
 
@@ -239,16 +268,51 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                             wrap: word-wrap;
                         }
-                        if product.has-standard && root.is-admin: Rectangle {
+                        if product.has-standard && root.is-admin: VerticalLayout {
                             width: TableStyle.col-standard;
-                            height: parent.height;
-                            TextInput {
-                                x: 4px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 8px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                color: DetailStyle.font-color;
-                                text <=> edit-std;
+                            alignment: center;
+                            Rectangle {
+                                height: 30px;
+                                background: #ffffff;
+                                border-color: #cccccc;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: DetailStyle.font-color;
+                                    text <=> edit-std;
+                                }
+                            }
+                        }
+
+                        if !root.is-admin: Text {
+                            width: TableStyle.col-description;
+                            text: variation.description;
+                            font-size: TableStyle.font-size;
+                            color: DetailStyle.font-color;
+                            vertical-alignment: center;
+                            wrap: word-wrap;
+                        }
+                        if root.is-admin: VerticalLayout {
+                            width: TableStyle.col-description;
+                            alignment: center;
+                            Rectangle {
+                                height: 30px;
+                                background: #ffffff;
+                                border-color: #cccccc;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: DetailStyle.font-color;
+                                    text <=> edit-desc;
+                                }
                             }
                         }
 
@@ -259,25 +323,24 @@ export component ProductDetail inherits Rectangle {
                             color: DetailStyle.font-color;
                             vertical-alignment: center;
                         }
-                        if root.is-admin: Rectangle {
+                        if root.is-admin: VerticalLayout {
                             width: TableStyle.col-price-unit;
-                            height: parent.height;
-                            TextInput {
-                                x: 4px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 8px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                color: DetailStyle.font-color;
-                                text <=> edit-price;
+                            alignment: center;
+                            Rectangle {
+                                height: 30px;
+                                background: #ffffff;
+                                border-color: #cccccc;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: DetailStyle.font-color;
+                                    text <=> edit-price;
+                                }
                             }
-                        }
-
-                        Text {
-                            width: TableStyle.col-price-total;
-                            text: variation.price-total;
-                            font-size: TableStyle.font-size;
-                            color: DetailStyle.font-color;
-                            vertical-alignment: center;
                         }
 
                         VerticalLayout {
@@ -289,7 +352,7 @@ export component ProductDetail inherits Rectangle {
                                 text: "Adauga in cos";
                                 button-type: ButtonType.Success;
                                 width: TableStyle.col-action;
-                                height: 36px;
+                                height: 30px;
                                 clicked => { root.add-to-cart(variation.id); }
                             }
 
@@ -301,6 +364,7 @@ export component ProductDetail inherits Rectangle {
                                     root.update-variation(
                                         variation.id,
                                         edit-dims, edit-pack, edit-std,
+                                        edit-desc,
                                         edit-price.to-float()
                                     );
                                 }
@@ -340,7 +404,7 @@ export component ProductDetail inherits Rectangle {
 
                 // Admin: Inline add form
                 if root.is-admin && root.show-add-form: Rectangle {
-                    height: 80px;
+                    height: 90px;
                     background: #eef6ff;
                     border-color: #90c4f9;
                     border-width: 1px;
@@ -348,54 +412,117 @@ export component ProductDetail inherits Rectangle {
                     HorizontalLayout {
                         padding-left: 10px;
                         padding-right: 10px;
-                        spacing: 8px;
+                        padding-top: 8px;
+                        padding-bottom: 8px;
+                        spacing: 10px;
                         alignment: start;
 
                         VerticalLayout {
+                            spacing: 4px;
                             alignment: center;
-                            Text { text: "Dim:"; font-size: 12px; }
-                            TextInput {
-                                width: TableStyle.col-dimensions - 10px;
-                                height: 30px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                text <=> root.new-dims;
+                            Text { text: "Dimensiune:"; font-size: 12px; color: #333333; }
+                            Rectangle {
+                                width: TableStyle.col-dimensions;
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #90c4f9;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    text <=> root.new-dims;
+                                }
                             }
                         }
+
                         VerticalLayout {
+                            spacing: 4px;
                             alignment: center;
-                            Text { text: "Ambalaj:"; font-size: 12px; }
-                            TextInput {
-                                width: TableStyle.col-packaging - 10px;
-                                height: 30px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                text <=> root.new-pack;
+                            Text { text: "Ambalaj:"; font-size: 12px; color: #333333; }
+                            Rectangle {
+                                width: TableStyle.col-packaging;
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #90c4f9;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    text <=> root.new-pack;
+                                }
                             }
                         }
+
                         VerticalLayout {
+                            spacing: 4px;
                             alignment: center;
-                            Text { text: "Standard:"; font-size: 12px; }
-                            TextInput {
-                                width: TableStyle.col-standard - 10px;
-                                height: 30px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                text <=> root.new-std;
+                            Text { text: "Standard:"; font-size: 12px; color: #333333; }
+                            Rectangle {
+                                width: TableStyle.col-standard;
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #90c4f9;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    text <=> root.new-std;
+                                }
                             }
                         }
+
                         VerticalLayout {
+                            spacing: 4px;
                             alignment: center;
-                            Text { text: "Pret:"; font-size: 12px; }
-                            TextInput {
-                                width: 80px;
-                                height: 30px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                input-type: decimal;
-                                text <=> root.new-price-str;
+                            Text { text: "Descriere:"; font-size: 12px; color: #333333; }
+                            Rectangle {
+                                width: TableStyle.col-description;
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #90c4f9;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    text <=> root.new-desc;
+                                }
                             }
                         }
+
+                        VerticalLayout {
+                            spacing: 4px;
+                            alignment: center;
+                            Text { text: "Pret:"; font-size: 12px; color: #333333; }
+                            Rectangle {
+                                width: 90px;
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #90c4f9;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    input-type: decimal;
+                                    text <=> root.new-price-str;
+                                }
+                            }
+                        }
+
                         VerticalLayout {
                             alignment: center;
                             spacing: 4px;
@@ -407,12 +534,14 @@ export component ProductDetail inherits Rectangle {
                                 clicked => {
                                     root.add-variation(
                                         root.new-dims, root.new-pack,
-                                        root.new-std, root.new-price-str.to-float()
+                                        root.new-std, root.new-desc,
+                                        root.new-price-str.to-float()
                                     );
                                     root.show-add-form = false;
                                     root.new-dims = "";
                                     root.new-pack = "";
                                     root.new-std = "";
+                                    root.new-desc = "";
                                     root.new-price-str = "";
                                 }
                             }

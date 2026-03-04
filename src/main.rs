@@ -52,6 +52,7 @@ fn to_product_full(p: models::product::ProductData, data_dir: &std::path::Path) 
             dimensions:     v.dimensions.clone().unwrap_or_default().into(),
             packaging:      v.packaging.clone().unwrap_or_default().into(),
             standard:       v.standard.clone().unwrap_or_default().into(),
+            description:    v.description.clone().unwrap_or_default().into(),
             price:          v.price as f32,
             price_total:    format!("{:.2} RON", v.price).into(),
             price_per_unit: price_per_unit(v.packaging.as_deref().unwrap_or(""), v.price).into(),
@@ -139,6 +140,12 @@ fn main() -> Result<(), slint::PlatformError> {
     let cart = Rc::new(slint::VecModel::<CartItem>::from(vec![]));
     ui.set_cart_items(ModelRc::new(cart.clone()));
 
+    // Initialize create-variations model with one empty row
+    let create_vars_model = Rc::new(slint::VecModel::<VariationInput>::from(vec![
+        VariationInput::default(),
+    ]));
+    ui.set_create_variations(ModelRc::new(create_vars_model.clone()));
+
     let login_url = format!("{base_url}/user/token");
     let me_url = format!("{base_url}/user/me");
 
@@ -169,8 +176,20 @@ fn main() -> Result<(), slint::PlatformError> {
                     start_sync(rt2, client2, pool2, base_url2, final_token, data_dir2, cache2, ui_weak);
                 }
                 Err(e) => {
-                    eprintln!("[auth] token invalid: {e}");
-                    let _ = config::Config { base_url: base_url2, token: None }.save();
+                    let is_network_err = e
+                        .downcast_ref::<reqwest::Error>()
+                        .map(|re| re.is_connect() || re.is_timeout())
+                        .unwrap_or(false);
+                    if is_network_err {
+                        eprintln!("[auth] no network, skipping token check — logging in offline");
+                        *shared_token2.lock().unwrap() = Some(old_token);
+                        let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                            ui.set_logged(true);
+                        });
+                    } else {
+                        eprintln!("[auth] token invalid: {e}");
+                        let _ = config::Config { base_url: base_url2, token: None }.save();
+                    }
                 }
             }
         });
@@ -434,6 +453,43 @@ fn main() -> Result<(), slint::PlatformError> {
         });
     }
 
+    // --- variation row management (create form) ---
+    {
+        let model = create_vars_model.clone();
+        ui.on_add_variation_row(move || {
+            model.push(VariationInput::default());
+        });
+    }
+    {
+        let model = create_vars_model.clone();
+        ui.on_remove_variation_row(move |i| {
+            let idx = i as usize;
+            if idx < model.row_count() {
+                model.remove(idx);
+            }
+        });
+    }
+    {
+        let model = create_vars_model.clone();
+        ui.on_variation_field_changed(move |i, dims, pack, std_val, price| {
+            let idx = i as usize;
+            if idx < model.row_count() {
+                model.set_row_data(idx, VariationInput {
+                    dims: dims.clone(),
+                    pack: pack.clone(),
+                    std: std_val.clone(),
+                    price: price.clone(),
+                });
+            }
+        });
+    }
+    {
+        let model = create_vars_model.clone();
+        ui.on_clear_create_variations(move || {
+            model.set_vec(vec![VariationInput::default()]);
+        });
+    }
+
     // --- create-product ---
     {
         let client_cp = client.clone();
@@ -441,8 +497,8 @@ fn main() -> Result<(), slint::PlatformError> {
         let base_url_cp = base_url.clone();
         let shared_token_cp = shared_token.clone();
         let ui_weak = ui.as_weak();
-
-        ui.on_create_product(move |name, category, price| {
+        let model_cp = create_vars_model.clone();
+        ui.on_create_product(move |name, category, desc, img_path| {
             let token = match shared_token_cp.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -451,11 +507,25 @@ fn main() -> Result<(), slint::PlatformError> {
             let base_url = base_url_cp.clone();
             let rt = rt_cp.clone();
             let ui_weak = ui_weak.clone();
+
+            // Read current variation data (we're on the Slint main thread)
+            let variations: Vec<models::product::NewVariationInput> = (0..model_cp.row_count())
+                .filter_map(|i| model_cp.row_data(i))
+                .map(|v| models::product::NewVariationInput {
+                    dimensions: opt_str(&v.dims),
+                    packaging: opt_str(&v.pack),
+                    standard: opt_str(&v.std),
+                    description: None,
+                    price: v.price.parse::<f64>().unwrap_or(0.0),
+                })
+                .collect();
+
             let product = models::product::NewProduct {
                 name: name.to_string(),
                 category: category.to_string(),
-                price: price as f64,
-                description: None,
+                description: opt_str(&desc),
+                image_path: opt_str(&img_path),
+                variations,
             };
 
             std::thread::spawn(move || {
@@ -463,11 +533,84 @@ fn main() -> Result<(), slint::PlatformError> {
                     match api::products::create(&client, &base_url, &token, &product).await {
                         Ok(_) => {
                             eprintln!("[main] product created");
-                            let _ = ui_weak.upgrade_in_event_loop(|ui| { ui.set_current_view(0); });
+                            let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                                ui.set_create_image_path("".into());
+                                ui.invoke_clear_create_variations();
+                                ui.set_current_view(0);
+                            });
                         }
                         Err(e) => eprintln!("[main] create_product error: {e}"),
                     }
                 });
+            });
+        });
+    }
+
+    // --- select-image-create ---
+    {
+        let ui_weak = ui.as_weak();
+        ui.on_select_image_create(move || {
+            let ui_weak = ui_weak.clone();
+            std::thread::spawn(move || {
+                let file = rfd::FileDialog::new()
+                    .add_filter("Images", &["jpg", "jpeg", "png", "webp"])
+                    .pick_file();
+                if let Some(path) = file {
+                    let path_str = path.to_string_lossy().to_string();
+                    let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                        ui.set_create_image_path(path_str.into());
+                    });
+                }
+            });
+        });
+    }
+
+    // --- change-product-image ---
+    {
+        let client_cpi = client.clone();
+        let rt_cpi = rt.clone();
+        let base_url_cpi = base_url.clone();
+        let shared_token_cpi = shared_token.clone();
+        let pool_cpi = pool.clone();
+        let data_dir_cpi = data_dir.clone();
+        let ui_weak = ui.as_weak();
+
+        ui.on_change_product_image(move |product_id| {
+            let client = (*client_cpi).clone();
+            let base_url = base_url_cpi.clone();
+            let rt = rt_cpi.clone();
+            let pool = pool_cpi.clone();
+            let data_dir = data_dir_cpi.clone();
+            let ui_weak = ui_weak.clone();
+            let token = match shared_token_cpi.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+
+            std::thread::spawn(move || {
+                let file = rfd::FileDialog::new()
+                    .add_filter("Images", &["jpg", "jpeg", "png", "webp"])
+                    .pick_file();
+                if let Some(path) = file {
+                    let path_str = path.to_string_lossy().to_string();
+                    rt.block_on(async move {
+                        match api::products::update_product_image(
+                            &client, &base_url, &token,
+                            product_id as i64, &path_str,
+                        ).await {
+                            Ok(p) => {
+                                let _ = db::products::upsert(&pool, &p).await;
+                                if let Ok(Some(p2)) = db::products::get_by_id(&pool, product_id as i64).await {
+                                    let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                                        let full = to_product_full(p2, &data_dir);
+                                        ui.set_selected_product(full);
+                                    });
+                                }
+                            }
+                            Err(e) => eprintln!("[main] change_product_image error: {e}"),
+                        }
+                    });
+                }
             });
         });
     }
@@ -516,7 +659,7 @@ fn main() -> Result<(), slint::PlatformError> {
         let data_dir_uv = data_dir.clone();
         let ui_weak = ui.as_weak();
 
-        ui.on_update_variation(move |product_id, variation_id, dims, pack, std_val, price| {
+        ui.on_update_variation(move |product_id, variation_id, dims, pack, std_val, desc, price| {
             let token = match shared_token_uv.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -531,6 +674,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 dimensions: opt_str(&dims),
                 packaging: opt_str(&pack),
                 standard: opt_str(&std_val),
+                description: opt_str(&desc),
                 price: price as f64,
             };
 
@@ -607,7 +751,7 @@ fn main() -> Result<(), slint::PlatformError> {
         let data_dir_av = data_dir.clone();
         let ui_weak = ui.as_weak();
 
-        ui.on_add_variation(move |product_id, dims, pack, std_val, price| {
+        ui.on_add_variation(move |product_id, dims, pack, std_val, desc, price| {
             let token = match shared_token_av.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -622,6 +766,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 dimensions: opt_str(&dims),
                 packaging: opt_str(&pack),
                 standard: opt_str(&std_val),
+                description: opt_str(&desc),
                 price: price as f64,
             };
 
@@ -828,7 +973,7 @@ fn main() -> Result<(), slint::PlatformError> {
                         Ok(users) => {
                             let slint_users: Vec<UserData> = users.iter().map(|u| UserData {
                                 id: u.id as i32,
-                                username: u.username.clone().into(),
+                                name: u.name.clone().into(),
                                 email: u.email.clone().into(),
                                 is_active: u.is_active,
                                 is_superuser: u.is_superuser,
@@ -862,7 +1007,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let rt = rt_cu.clone();
             let ui_weak = ui_weak.clone();
             let user = api::users::CreateUser {
-                username: username.to_string(),
+                name: username.to_string(),
                 email: email.to_string(),
                 password: password.to_string(),
                 is_active,
@@ -879,7 +1024,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     if let Ok(users) = api::users::fetch_all(&client, &base_url, &token).await {
                         let slint_users: Vec<UserData> = users.iter().map(|u| UserData {
                             id: u.id as i32,
-                            username: u.username.clone().into(),
+                            name: u.name.clone().into(),
                             email: u.email.clone().into(),
                             is_active: u.is_active,
                             is_superuser: u.is_superuser,
@@ -911,7 +1056,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let rt = rt_uu.clone();
             let ui_weak = ui_weak.clone();
             let user = api::users::UpdateUser {
-                username: username.to_string(),
+                name: username.to_string(),
                 email: email.to_string(),
                 is_active,
                 is_superuser,
@@ -926,7 +1071,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     if let Ok(users) = api::users::fetch_all(&client, &base_url, &token).await {
                         let slint_users: Vec<UserData> = users.iter().map(|u| UserData {
                             id: u.id as i32,
-                            username: u.username.clone().into(),
+                            name: u.name.clone().into(),
                             email: u.email.clone().into(),
                             is_active: u.is_active,
                             is_superuser: u.is_superuser,
@@ -967,7 +1112,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     if let Ok(users) = api::users::fetch_all(&client, &base_url, &token).await {
                         let slint_users: Vec<UserData> = users.iter().map(|u| UserData {
                             id: u.id as i32,
-                            username: u.username.clone().into(),
+                            name: u.name.clone().into(),
                             email: u.email.clone().into(),
                             is_active: u.is_active,
                             is_superuser: u.is_superuser,
@@ -975,6 +1120,43 @@ fn main() -> Result<(), slint::PlatformError> {
                         let _ = ui_weak.upgrade_in_event_loop(move |ui| {
                             ui.set_users(Rc::new(slint::VecModel::from(slint_users)).into());
                         });
+                    }
+                });
+            });
+        });
+    }
+
+    // --- download-catalog-pdf ---
+    {
+        let client_pdf = client.clone();
+        let rt_pdf = rt.clone();
+        let base_url_pdf = base_url.clone();
+        let shared_token_pdf = shared_token.clone();
+
+        ui.on_download_catalog_pdf(move || {
+            let token = match shared_token_pdf.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+            let client = (*client_pdf).clone();
+            let base_url = base_url_pdf.clone();
+            let rt = rt_pdf.clone();
+
+            std::thread::spawn(move || {
+                rt.block_on(async move {
+                    match api::products::download_catalog_pdf(&client, &base_url, &token).await {
+                        Ok(bytes) => {
+                            let downloads = std::env::var("HOME")
+                                .or_else(|_| std::env::var("USERPROFILE"))
+                                .map(|h| std::path::PathBuf::from(h).join("Downloads"))
+                                .unwrap_or_else(|_| std::path::PathBuf::from("."));
+                            let path = downloads.join("catalog.pdf");
+                            match tokio::fs::write(&path, &bytes).await {
+                                Ok(_) => eprintln!("[main] catalog PDF saved to {}", path.display()),
+                                Err(e) => eprintln!("[main] failed to save PDF: {e}"),
+                            }
+                        }
+                        Err(e) => eprintln!("[main] download_catalog_pdf error: {e}"),
                     }
                 });
             });

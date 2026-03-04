@@ -47,17 +47,49 @@ pub async fn create(
     token: &str,
     product: &NewProduct,
 ) -> Result<ProductData, ApiError> {
+    let variations: Vec<NewVariationPayload> = product
+        .variations
+        .iter()
+        .enumerate()
+        .map(|(i, v)| NewVariationPayload {
+            price: v.price,
+            dimensions: v.dimensions.clone(),
+            packaging: v.packaging.clone(),
+            standard: v.standard.clone(),
+            // product-level description goes to the first variation
+            description: if i == 0 { product.description.clone().or_else(|| v.description.clone()) }
+                         else { v.description.clone() },
+        })
+        .collect();
+
     let payload = NewProductPayload {
         name: product.name.clone(),
         category: product.category.clone(),
-        variations: vec![NewVariationPayload {
-            price: product.price,
-            description: product.description.clone(),
-        }],
+        variations,
     };
 
     let data_json = serde_json::to_string(&payload)?;
-    let form = reqwest::multipart::Form::new().text("data", data_json);
+    let mut form = reqwest::multipart::Form::new().text("data", data_json);
+
+    if let Some(img_path) = &product.image_path {
+        let img_data = tokio::fs::read(img_path).await?;
+        let filename = std::path::Path::new(img_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("image.jpg")
+            .to_string();
+        let mime = if filename.ends_with(".png") {
+            "image/png"
+        } else if filename.ends_with(".webp") {
+            "image/webp"
+        } else {
+            "image/jpeg"
+        };
+        let part = reqwest::multipart::Part::bytes(img_data)
+            .file_name(filename)
+            .mime_str(mime)?;
+        form = form.part("image", part);
+    }
 
     let res = client
         .post(format!("{base_url}/product/"))
@@ -85,6 +117,8 @@ pub struct VariationUpdate {
     pub packaging: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub standard: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub price: f64,
 }
 
@@ -96,6 +130,8 @@ pub struct NewVariation {
     pub packaging: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub standard: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub price: f64,
 }
 
@@ -103,12 +139,12 @@ pub async fn update_variation(
     client: &Client,
     base_url: &str,
     token: &str,
-    product_id: i64,
+    _product_id: i64,
     variation_id: i64,
     update: VariationUpdate,
 ) -> Result<(), ApiError> {
     let res = client
-        .put(format!("{base_url}/product/{product_id}/variation/{variation_id}/"))
+        .put(format!("{base_url}/product/variation/{variation_id}/"))
         .bearer_auth(token)
         .json(&update)
         .send()
@@ -153,7 +189,7 @@ pub async fn add_variation(
     variation: NewVariation,
 ) -> Result<(), ApiError> {
     let res = client
-        .post(format!("{base_url}/product/{product_id}/variation/"))
+        .post(format!("{base_url}/product/{product_id}/variations"))
         .bearer_auth(token)
         .json(&variation)
         .send()
@@ -187,4 +223,68 @@ pub async fn delete_product(
     }
     eprintln!("[api/products] product {product_id} deleted");
     Ok(())
+}
+
+pub async fn download_catalog_pdf(
+    client: &Client,
+    base_url: &str,
+    token: &str,
+) -> Result<Vec<u8>, ApiError> {
+    let res = client
+        .get(format!("{base_url}/catalog/pdf"))
+        .bearer_auth(token)
+        .send()
+        .await?;
+
+    let status = res.status();
+    if !status.is_success() {
+        let body = res.text().await.unwrap_or_default();
+        return Err(format!("download_catalog_pdf failed {status}: {body}").into());
+    }
+
+    eprintln!("[api/products] catalog PDF downloaded");
+    Ok(res.bytes().await?.to_vec())
+}
+
+pub async fn update_product_image(
+    client: &Client,
+    base_url: &str,
+    token: &str,
+    product_id: i64,
+    image_path: &str,
+) -> Result<ProductData, ApiError> {
+    let img_data = tokio::fs::read(image_path).await?;
+    let filename = std::path::Path::new(image_path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("image.jpg")
+        .to_string();
+    let mime = if filename.ends_with(".png") {
+        "image/png"
+    } else if filename.ends_with(".webp") {
+        "image/webp"
+    } else {
+        "image/jpeg"
+    };
+    let part = reqwest::multipart::Part::bytes(img_data)
+        .file_name(filename)
+        .mime_str(mime)?;
+    let form = reqwest::multipart::Form::new().part("image", part);
+
+    let res = client
+        .patch(format!("{base_url}/product/{product_id}/"))
+        .bearer_auth(token)
+        .multipart(form)
+        .send()
+        .await?;
+
+    let status = res.status();
+    let body = res.text().await?;
+    eprintln!("[api/products] update_product_image {product_id} status: {status}");
+
+    if !status.is_success() {
+        return Err(format!("update_product_image failed {status}: {body}").into());
+    }
+
+    Ok(serde_json::from_str(&body)?)
 }

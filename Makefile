@@ -60,9 +60,9 @@ windows:
 #     3. cargo install cargo-apk
 #     4. rustup target add aarch64-linux-android armv7-linux-androideabi
 android:
-	cargo apk build --release
+	cargo apk build --release --lib
 	mkdir -p $(DIST)
-	find target -name "$(APP).apk" -exec cp {} $(DIST)/$(PKG).apk \;
+	find target -name "warehouse.apk" -exec cp {} $(DIST)/$(PKG).apk \;
 	@echo "→ $(DIST)/$(PKG).apk"
 
 # ── Clean ─────────────────────────────────────────────────────────────────────

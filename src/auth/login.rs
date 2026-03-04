@@ -14,7 +14,7 @@ pub async fn login(
 
     let res = client
         .post(url)
-        .json(&payload)
+        .form(&payload)
         .send()
         .await?
         .json::<LoginResponse>()

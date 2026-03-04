@@ -4,11 +4,13 @@ import { NavBar } from "components/nav.slint";
 import { Filter } from "components/filter.slint";
 import { Catalog } from "view/catalog.slint";
 import { LoginView } from "view/login.slint";
+import { ProductDetails } from "types.slint";
 
 
 export component Main inherits Window {
 
     in-out property <bool> logged: false;
+    in-out property <[ProductDetails]> products;
     callback login(string, string);
 
     width: MainWindowStyle.width;
@@ -34,7 +36,7 @@ export component Main inherits Window {
         ScrollView {
             catalog-view := Catalog {
                 width: parent.width;
-                products: [];
+                products: root.products;
             }
 
             viewport-height: catalog-view.height;

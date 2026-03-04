@@ -254,27 +254,19 @@ pub async fn update_product_image(
     image_path: &str,
 ) -> Result<ProductData, ApiError> {
     let img_data = tokio::fs::read(image_path).await?;
-    let filename = std::path::Path::new(image_path)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("image.jpg")
-        .to_string();
-    let mime = if filename.ends_with(".png") {
+    let mime = if image_path.ends_with(".png") {
         "image/png"
-    } else if filename.ends_with(".webp") {
+    } else if image_path.ends_with(".webp") {
         "image/webp"
     } else {
         "image/jpeg"
     };
-    let part = reqwest::multipart::Part::bytes(img_data)
-        .file_name(filename)
-        .mime_str(mime)?;
-    let form = reqwest::multipart::Form::new().part("image", part);
 
     let res = client
-        .patch(format!("{base_url}/product/{product_id}/"))
+        .put(format!("{base_url}/product/{product_id}"))
         .bearer_auth(token)
-        .multipart(form)
+        .header("Content-Type", mime)
+        .body(img_data)
         .send()
         .await?;
 

@@ -1,6 +1,8 @@
 fn main() {
     slint_build::compile("ui/main.slint").expect("Slint build failed");
 
+    println!("cargo:rerun-if-changed=src");
+    println!("cargo:rerun-if-changed=ui");
     println!("cargo:rerun-if-changed=Logo.png");
     println!("cargo:rerun-if-changed=config.json");
 

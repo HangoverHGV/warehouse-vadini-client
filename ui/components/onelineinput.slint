@@ -5,6 +5,7 @@ export component OneLineInput inherits Rectangle {
     in property <string> placeholder-text: "Cauta...";
     in property <image> icon;
     in property <InputType> input-type: text;
+    callback accepted();
 
     width: OneLineInputStyles.width;
     height: ButtonStyles.button-height;
@@ -40,8 +41,8 @@ export component OneLineInput inherits Rectangle {
         text <=> root.txt;
         color: OneLineInputStyles.font-color;
         font-size: OneLineInputStyles.font-size;
-        cursor-position-changed(position) => {
-        }
+        cursor-position-changed(position) => { }
+        accepted => { root.accepted(); }
         input-type: root.input-type;
     }
 }

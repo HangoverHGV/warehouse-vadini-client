@@ -23,6 +23,7 @@ export component LoginView inherits Rectangle {
             username-input := OneLineInput {
                 placeholder-text: "username";
                 width: 300px;
+                accepted => { root.login(username-input.txt, password-input.txt); }
             }
         }
         HorizontalLayout {
@@ -37,6 +38,7 @@ export component LoginView inherits Rectangle {
                 placeholder-text: "password";
                 input-type: password;
                 width: 300px;
+                accepted => { root.login(username-input.txt, password-input.txt); }
             }
         }
         HorizontalLayout {

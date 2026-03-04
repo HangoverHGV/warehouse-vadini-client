@@ -8,6 +8,6 @@ pub struct LoginPayload {
 
 #[derive(Deserialize, Debug)]
 pub struct LoginResponse {
-    pub token: Option<String>,
+    pub access_token: Option<String>,
     pub message: Option<String>,
 }

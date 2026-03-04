@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Warehouse Vadini
+GenericName=Warehouse Client
+Comment=Warehouse management for Vadini
+Exec=warehouse-vadini
+Icon=warehouse-vadini
+Terminal=false
+Categories=Office;Business;
+Keywords=warehouse;vadini;inventory;

@@ -66,6 +66,7 @@ export component Main inherits Window {
     width: MainWindowStyle.width;
     height: MainWindowStyle.height;
     background: MainWindowStyle.background;
+    icon: @image-url("../Logo.png");
 
     if !logged: LoginView {
         width: root.width;

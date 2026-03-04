@@ -22,6 +22,13 @@ impl Config {
         Ok(())
     }
 
+    pub fn data_dir() -> PathBuf {
+        std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|p| p.join("data")))
+            .unwrap_or_else(|| PathBuf::from("data"))
+    }
+
     fn config_path() -> PathBuf {
         std::env::current_exe()
             .ok()

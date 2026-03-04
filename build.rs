@@ -8,6 +8,9 @@ fn main() {
         .ancestors()
         .nth(3)
         .unwrap();
-    std::fs::copy("config.json", binary_dir.join("config.json"))
-        .expect("Failed to copy config.json to build directory");
+    let dest = binary_dir.join("config.json");
+    if !dest.exists() {
+        std::fs::copy("config.json", &dest)
+            .expect("Failed to copy config.json to build directory");
+    }
 }

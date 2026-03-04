@@ -3,8 +3,8 @@
 mod auth;
 mod models;
 
-use std::error::Error;
 use reqwest::Client;
+use std::error::Error;
 
 slint::include_modules!();
 
@@ -23,7 +23,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let password = password.to_string();
 
         tokio::spawn(async move {
-            match auth::login::login(&client, "http://your-api/login", &username, &password).await {
+            match auth::login::login(
+                &client,
+                "https://warehouse.sudurasimontaj.com/user/token",
+                &username,
+                &password,
+            )
+            .await
+            {
                 Ok(response) if response.token.is_some() => {
                     let _ = slint::invoke_from_event_loop(move || {
                         if let Some(ui) = ui_weak.upgrade() {

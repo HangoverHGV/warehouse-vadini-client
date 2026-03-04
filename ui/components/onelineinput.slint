@@ -1,9 +1,10 @@
 import { OneLineInputStyles, ButtonStyles } from "../style/defaults.slint";
 
 export component OneLineInput inherits Rectangle {
-    in-out property <string> text;
+    in-out property <string> txt;
     in property <string> placeholder-text: "Cauta...";
     in property <image> icon;
+    in property <InputType> input-type: text;
 
     width: OneLineInputStyles.width;
     height: ButtonStyles.button-height;
@@ -23,7 +24,7 @@ export component OneLineInput inherits Rectangle {
         source: icon;
     }
 
-    if text == "": Text {
+    if txt == "": Text {
         x: 10px + icon-offset;
         y: (parent.height - self.height) / 2;
         text: placeholder-text;
@@ -36,10 +37,11 @@ export component OneLineInput inherits Rectangle {
         width: parent.width - 20px - icon-offset;
         height: parent.height;
         vertical-alignment: center;
-        text <=> root.text;
+        text <=> root.txt;
         color: OneLineInputStyles.font-color;
         font-size: OneLineInputStyles.font-size;
         cursor-position-changed(position) => {
         }
+        input-type: root.input-type;
     }
 }

@@ -1,0 +1,48 @@
+import { OneLineInput } from "../components/onelineinput.slint";
+import { LoginStyle } from "../style/defaults.slint";
+import { CustomButton } from "../components/button.slint";
+
+
+export component LoginView inherits Rectangle {
+
+    callback login(string, string);  // (username, password)
+
+    background: LoginStyle.background;
+
+    VerticalLayout {
+        spacing: 10px;
+        alignment: center;
+        HorizontalLayout {
+            alignment: center;
+            Text {
+                text: "Username: ";
+                font-size: LoginStyle.font-size;
+                color: LoginStyle.font-color;
+                font-weight: LoginStyle.font-weight;
+            }
+            username-input := OneLineInput {
+                placeholder-text: "username";
+            }
+        }
+        HorizontalLayout {
+            alignment: center;
+            Text {
+                text: "Password: ";
+                font-size: LoginStyle.font-size;
+                color: LoginStyle.font-color;
+                font-weight: LoginStyle.font-weight;
+            }
+            password-input := OneLineInput {
+                placeholder-text: "password";
+                input-type: password;
+            }
+        }
+        HorizontalLayout {
+            alignment: center;
+            CustomButton {
+                text: "Log in";
+                clicked => { root.login(username-input.txt, password-input.txt); }
+            }
+        }
+    }
+}

@@ -3,24 +3,40 @@ import { MainWindowStyle } from "style/defaults.slint";
 import { NavBar } from "components/nav.slint";
 import { Filter } from "components/filter.slint";
 import { Catalog } from "view/catalog.slint";
+import { LoginView } from "view/login.slint";
 
 
 export component Main inherits Window {
+
+    in-out property <bool> logged: false;
+    callback login(string, string);
+
     width: MainWindowStyle.width;
     height: MainWindowStyle.height;
     background: MainWindowStyle.background;
 
-    VerticalLayout {
+    if !logged: LoginView {
+        width: root.width;
+        height: root.height;
+        login(user, pass) => {
+            root.login(user, pass);
+        }
+    }
+
+    if logged: VerticalLayout {
         spacing: 5px;
         NavBar { }
+
         Filter {
             x: 10px;
         }
+
         ScrollView {
             catalog-view := Catalog {
                 width: parent.width;
                 products: [];
             }
+
             viewport-height: catalog-view.height;
         }
     }

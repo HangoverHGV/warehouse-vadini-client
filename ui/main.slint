@@ -176,6 +176,7 @@ export component Main inherits Window {
         }
 
         if current-view == 5: CreateProductView {
+            categories: root.categories;
             image-path <=> root.create-image-path;
             variation-list <=> root.create-variations;
             go-back => { root.current-view = 0; }

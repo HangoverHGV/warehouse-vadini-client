@@ -1,6 +1,7 @@
 import { ScrollView } from "std-widgets.slint";
 import { TableStyle, DetailStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
+import { SuggestInput } from "../components/suggest-input.slint";
 import { ButtonType, ProductFull, VariationDetails } from "../types.slint";
 import { Icons } from "../style/icons.slint";
 
@@ -139,28 +140,19 @@ export component ProductDetail inherits Rectangle {
                     }
                     if root.is-admin: HorizontalLayout {
                         spacing: 6px;
-                        alignment: start;
+                        height: 28px;
                         Text {
                             text: "Categorie:";
                             font-size: 12px;
                             color: #475569;
                             vertical-alignment: center;
+                            horizontal-stretch: 0;
                         }
-                        Rectangle {
-                            width: 200px;
-                            height: 28px;
-                            background: #ffffff;
-                            border-color: #93c5fd;
-                            border-width: 1px;
-                            border-radius: 4px;
-                            TextInput {
-                                x: 6px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 12px;
-                                vertical-alignment: center;
-                                font-size: 12px;
-                                color: #1e293b;
-                                text <=> root.edit-category;
-                            }
+                        SuggestInput {
+                            horizontal-stretch: 1;
+                            suggestions: root.categories;
+                            value <=> root.edit-category;
+                            font-size: 12px;
                         }
                     }
 

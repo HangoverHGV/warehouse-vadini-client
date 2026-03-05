@@ -2,6 +2,7 @@ import { ScrollView } from "std-widgets.slint";
 import { TableStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
 import { OneLineInput } from "../components/onelineinput.slint";
+import { SuggestInput } from "../components/suggest-input.slint";
 import { ButtonType, VariationInput } from "../types.slint";
 
 export component CreateProductView inherits Rectangle {
@@ -14,6 +15,7 @@ export component CreateProductView inherits Rectangle {
     // index, dims, pack, std, price
     callback variation-field-changed(int, string, string, string, string);
 
+    in property <[string]> categories: [];
     in-out property <string> image-path: "";
     in-out property <[VariationInput]> variation-list;
 
@@ -104,10 +106,12 @@ export component CreateProductView inherits Rectangle {
                             spacing: 10px;
                             alignment: start;
                             Text { text: "Categorie:"; width: 140px; font-size: 14px; vertical-alignment: center; color: #475569; }
-                            OneLineInput {
+                            SuggestInput {
                                 width: min(320px, root.width - 200px);
-                                placeholder-text: "Categorie";
-                                edited(t) => { root.category-val = t; }
+                                height: 38px;
+                                suggestions: root.categories;
+                                value <=> root.category-val;
+                                font-size: 14px;
                             }
                         }
 

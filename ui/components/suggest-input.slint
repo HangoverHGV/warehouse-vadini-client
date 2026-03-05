@@ -1,0 +1,111 @@
+import { ScrollView } from "std-widgets.slint";
+import { DropdownStyles } from "../style/defaults.slint";
+import { Icons } from "../style/icons.slint";
+
+export component SuggestInput inherits Rectangle {
+    in property <[string]> suggestions: [];
+    in-out property <string> value: "";
+    in property <length> font-size: DropdownStyles.font-size;
+    in property <brush> font-color: DropdownStyles.font-color;
+
+    callback changed(string);
+
+    property <bool> popup-open: false;
+    property <length> item-height: root.font-size + 8px;
+
+    height: 28px;
+    background: #ffffff;
+    border-color: popup-open || input.has-focus ? #93c5fd : #cbd5e1;
+    border-width: 1px;
+    border-radius: 4px;
+    clip: false;
+
+    HorizontalLayout {
+        padding-left: 6px;
+        padding-right: 2px;
+        spacing: 2px;
+
+        input := TextInput {
+            horizontal-stretch: 1;
+            vertical-alignment: center;
+            font-size: root.font-size;
+            color: root.font-color;
+            text <=> root.value;
+            edited => { root.changed(root.value); }
+        }
+
+        // Arrow toggle button
+        Rectangle {
+            width: root.height - 4px;
+            background: arrow-touch.has-hover ? #e2e8f0 : transparent;
+            border-radius: 3px;
+
+            Image {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: parent.width - 4px;
+                height: parent.height - 4px;
+                source: Icons.arrows;
+                colorize: #64748b;
+            }
+
+            arrow-touch := TouchArea {
+                clicked => {
+                    popup-open = !popup-open;
+                    if popup-open { suggest-popup.show(); }
+                }
+            }
+        }
+    }
+
+    suggest-popup := PopupWindow {
+        x: 0;
+        y: root.height + 2px;
+        width: root.width;
+        height: min(suggestions.length * root.item-height, 180px);
+        close-policy: close-on-click-outside;
+
+        Rectangle {
+            width: parent.width;
+            height: parent.height;
+            background: #ffffff;
+            border-color: #cbd5e1;
+            border-width: 1px;
+            border-radius: 4px;
+            clip: true;
+
+            ScrollView {
+                width: parent.width;
+                height: parent.height;
+                viewport-height: suggestions.length * root.item-height;
+
+                VerticalLayout {
+                    for item in suggestions: Rectangle {
+                        height: root.item-height;
+                        background: item-touch.has-hover ? #eff6ff : transparent;
+
+                        Text {
+                            x: 8px;
+                            width: parent.width - 8px;
+                            height: parent.height;
+                            text: item;
+                            font-size: root.font-size;
+                            color: root.font-color;
+                            vertical-alignment: center;
+                            overflow: elide;
+                        }
+
+                        item-touch := TouchArea {
+                            clicked => {
+                                root.value = item;
+                                root.changed(item);
+                                popup-open = false;
+                                suggest-popup.close();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

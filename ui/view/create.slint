@@ -100,7 +100,7 @@ export component CreateProductView inherits Rectangle {
                             OneLineInput {
                                 width: min(320px, root.width - 200px);
                                 placeholder-text: "Nume produs";
-                                edited(t) => { root.name-val = t; }
+                                txt <=> root.name-val;
                             }
                         }
 

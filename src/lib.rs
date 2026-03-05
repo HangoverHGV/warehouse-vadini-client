@@ -174,6 +174,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                     *shared_token2.lock().unwrap() = Some(final_token.clone());
                     let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
                         ui.set_is_admin(is_admin);
+                        ui.invoke_load_templates();
                     });
                     start_sync(rt2, client2, pool2, base_url2, final_token, data_dir2, cache2, ui_weak);
                 }
@@ -239,6 +240,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                         let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
                             ui.set_logged(true);
                             ui.set_is_admin(is_admin);
+                            ui.invoke_load_templates();
                         });
                         start_sync(rt, client, pool, base_url, token, data_dir, cache, ui_weak);
                     }
@@ -1369,6 +1371,43 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         });
     }
 
+    // --- load-templates ---
+    {
+        let client_lt = client.clone();
+        let rt_lt = rt.clone();
+        let base_url_lt = base_url.clone();
+        let shared_token_lt = shared_token.clone();
+        let ui_handle_lt = ui.as_weak();
+
+        ui.on_load_templates(move || {
+            let token = match shared_token_lt.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+            let client = (*client_lt).clone();
+            let base_url = base_url_lt.clone();
+            let rt = rt_lt.clone();
+            let ui_handle = ui_handle_lt.clone();
+
+            std::thread::spawn(move || {
+                rt.block_on(async move {
+                    match api::templates::fetch_all(&client, &base_url, &token).await {
+                        Ok(list) => {
+                            let slint_items: Vec<TemplateItem> = list.iter().map(|t| TemplateItem {
+                                id: t.id as i32,
+                                name: t.name.clone().into(),
+                            }).collect();
+                            let _ = ui_handle.upgrade_in_event_loop(move |ui| {
+                                ui.set_templates(Rc::new(slint::VecModel::from(slint_items)).into());
+                            });
+                        }
+                        Err(e) => eprintln!("[main] load_templates error: {e}"),
+                    }
+                });
+            });
+        });
+    }
+
     // --- download-catalog-pdf ---
     {
         let client_pdf = client.clone();
@@ -1376,7 +1415,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let base_url_pdf = base_url.clone();
         let shared_token_pdf = shared_token.clone();
 
-        ui.on_download_catalog_pdf(move |per_page_str, order_by, category_break, template| {
+        ui.on_download_catalog_pdf(move |per_page_str, order_by, category_break, template_id| {
             let token = match shared_token_pdf.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -1386,11 +1425,10 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
             let rt = rt_pdf.clone();
             let per_page: i32 = per_page_str.trim().parse().unwrap_or(3);
             let order_by = order_by.to_string();
-            let template = template.to_string();
 
             std::thread::spawn(move || {
                 rt.block_on(async move {
-                    match api::products::download_catalog_pdf(&client, &base_url, &token, per_page, &order_by, category_break, &template).await {
+                    match api::products::download_catalog_pdf(&client, &base_url, &token, per_page, &order_by, category_break, template_id as i64).await {
                         Ok(bytes) => {
                             let downloads = std::env::var("HOME")
                                 .or_else(|_| std::env::var("USERPROFILE"))

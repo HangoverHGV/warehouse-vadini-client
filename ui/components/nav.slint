@@ -1,13 +1,14 @@
 import { NavbarStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "./button.slint";
-import { ButtonType } from "../types.slint";
+import { ButtonType, TemplateItem } from "../types.slint";
 import { OneLineInput } from "./onelineinput.slint";
 import { Icons } from "../style/icons.slint";
-import { CheckBox } from "std-widgets.slint";
+import { CheckBox, ScrollView } from "std-widgets.slint";
 
 export component NavBar inherits Rectangle {
     in property <bool> is-admin: false;
     in property <int> cart-count: 0;
+    in property <[TemplateItem]> templates: [];
 
     callback go-catalog();
     callback go-cart();
@@ -15,14 +16,15 @@ export component NavBar inherits Rectangle {
     callback go-orders();
     callback go-users();
     callback search-changed(string);
-    // per-page, order-by, category-break, template
-    callback download-catalog-pdf(string, string, bool, string);
+    // per-page, order-by, category-break, template-id
+    callback download-catalog-pdf(string, string, bool, int);
     callback refresh();
 
     property <string> pdf-per-page: "3";
-    property <string> pdf-order-by: "price";
-    property <bool> pdf-category-break: false;
-    property <string> pdf-template: "default";
+    property <string> pdf-order-by: "dimensions";
+    property <bool> pdf-category-break: true;
+    property <int> pdf-template-id: 0;
+    property <string> pdf-template-name: "—";
 
     height: is-admin ? NavbarStyle.admin-height : NavbarStyle.height;
     background: NavbarStyle.background;
@@ -58,7 +60,6 @@ export component NavBar inherits Rectangle {
             }
 
             // Search input — fills remaining space
-            // Use Rectangle (not VerticalLayout) to avoid binding loop in HorizontalLayout
             Rectangle {
                 horizontal-stretch: 1;
                 OneLineInput {
@@ -151,8 +152,8 @@ export component NavBar inherits Rectangle {
                 pdf-popup := PopupWindow {
                     x: 0px;
                     y: parent.height + 4px;
-                    width: 310px;
-                    height: 280px;
+                    width: 320px;
+                    height: 330px;
 
                     Rectangle {
                         width: parent.width;
@@ -201,30 +202,22 @@ export component NavBar inherits Rectangle {
                                 alignment: start;
                                 Text { text: "Sortare:"; width: 110px; font-size: 13px; color: #475569; vertical-alignment: center; }
                                 HorizontalLayout {
-                                    spacing: 4px;
-                                    Rectangle {
-                                        property <bool> sel: root.pdf-order-by == "price";
-                                        width: 60px; height: 28px;
+                                    spacing: 3px;
+                                    for opt in ["dimensions", "packaging", "id", "created_at"]: Rectangle {
+                                        property <bool> sel: root.pdf-order-by == opt;
+                                        width: 46px; height: 28px;
                                         background: sel ? #3b82f6 : #f1f5f9;
                                         border-radius: 4px;
-                                        Text { width: parent.width; height: parent.height; text: "price"; font-size: 12px; color: sel ? #ffffff : #475569; horizontal-alignment: center; vertical-alignment: center; }
-                                        TouchArea { clicked => { root.pdf-order-by = "price"; } }
-                                    }
-                                    Rectangle {
-                                        property <bool> sel: root.pdf-order-by == "name";
-                                        width: 60px; height: 28px;
-                                        background: sel ? #3b82f6 : #f1f5f9;
-                                        border-radius: 4px;
-                                        Text { width: parent.width; height: parent.height; text: "name"; font-size: 12px; color: sel ? #ffffff : #475569; horizontal-alignment: center; vertical-alignment: center; }
-                                        TouchArea { clicked => { root.pdf-order-by = "name"; } }
-                                    }
-                                    Rectangle {
-                                        property <bool> sel: root.pdf-order-by == "dims";
-                                        width: 60px; height: 28px;
-                                        background: sel ? #3b82f6 : #f1f5f9;
-                                        border-radius: 4px;
-                                        Text { width: parent.width; height: parent.height; text: "dims"; font-size: 12px; color: sel ? #ffffff : #475569; horizontal-alignment: center; vertical-alignment: center; }
-                                        TouchArea { clicked => { root.pdf-order-by = "dims"; } }
+                                        Text {
+                                            width: parent.width; height: parent.height;
+                                            text: opt;
+                                            font-size: 10px;
+                                            color: sel ? #ffffff : #475569;
+                                            horizontal-alignment: center;
+                                            vertical-alignment: center;
+                                            overflow: elide;
+                                        }
+                                        TouchArea { clicked => { root.pdf-order-by = opt; } }
                                     }
                                 }
                             }
@@ -239,23 +232,61 @@ export component NavBar inherits Rectangle {
                                 }
                             }
 
-                            // Template
+                            // Template selector
                             HorizontalLayout {
                                 spacing: 8px;
                                 alignment: start;
                                 Text { text: "Template:"; width: 110px; font-size: 13px; color: #475569; vertical-alignment: center; }
                                 Rectangle {
-                                    width: 120px; height: 30px;
-                                    background: #ffffff;
+                                    width: 160px; height: 28px;
+                                    background: #f8fafc;
                                     border-color: #94a3b8;
                                     border-width: 1px;
                                     border-radius: 4px;
-                                    TextInput {
-                                        x: 6px; y: (parent.height - self.height) / 2;
+                                    Text {
+                                        x: 6px;
                                         width: parent.width - 12px;
-                                        font-size: 13px;
-                                        color: #1e293b;
-                                        text <=> root.pdf-template;
+                                        height: parent.height;
+                                        text: root.pdf-template-name;
+                                        font-size: 12px;
+                                        color: root.pdf-template-id == 0 ? #94a3b8 : #1e293b;
+                                        vertical-alignment: center;
+                                        overflow: elide;
+                                    }
+                                }
+                            }
+
+                            // Template list
+                            ScrollView {
+                                height: 70px;
+                                viewport-height: templates.length * 28px;
+
+                                VerticalLayout {
+                                    for tmpl in templates: Rectangle {
+                                        property <bool> sel: root.pdf-template-id == tmpl.id;
+                                        height: 28px;
+                                        background: sel ? #eff6ff : (tmpl-touch.has-hover ? #f1f5f9 : #ffffff);
+                                        border-color: sel ? #3b82f6 : #e2e8f0;
+                                        border-width: sel ? 1px : 0px;
+                                        border-radius: 4px;
+
+                                        Text {
+                                            x: 8px;
+                                            width: parent.width - 16px;
+                                            height: parent.height;
+                                            text: tmpl.name;
+                                            font-size: 12px;
+                                            color: sel ? #3b82f6 : #475569;
+                                            vertical-alignment: center;
+                                            overflow: elide;
+                                        }
+
+                                        tmpl-touch := TouchArea {
+                                            clicked => {
+                                                root.pdf-template-id = tmpl.id;
+                                                root.pdf-template-name = tmpl.name;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -268,7 +299,7 @@ export component NavBar inherits Rectangle {
                                         root.pdf-per-page,
                                         root.pdf-order-by,
                                         root.pdf-category-break,
-                                        root.pdf-template
+                                        root.pdf-template-id
                                     );
                                 }
                             }

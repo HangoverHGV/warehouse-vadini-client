@@ -228,7 +228,7 @@ pub async fn download_catalog_pdf(
     per_page: i32,
     order_variant_by: &str,
     category_break: bool,
-    template: &str,
+    template_id: i64,
 ) -> Result<Vec<u8>, ApiError> {
     let res = client
         .get(format!("{base_url}/catalog/pdf"))
@@ -236,7 +236,7 @@ pub async fn download_catalog_pdf(
             ("per_page", per_page.to_string()),
             ("order_variant_by", order_variant_by.to_string()),
             ("category_break", category_break.to_string()),
-            ("template", template.to_string()),
+            ("template_id", template_id.to_string()),
         ])
         .bearer_auth(token)
         .send()

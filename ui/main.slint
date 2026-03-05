@@ -9,7 +9,7 @@ import { CartView } from "view/cart.slint";
 import { OrdersView } from "view/orders.slint";
 import { UsersView } from "view/users.slint";
 import { CreateProductView } from "view/create.slint";
-import { ProductDetails, ProductFull, CartItem, OrderData, UserData, VariationInput } from "types.slint";
+import { ProductDetails, ProductFull, CartItem, OrderData, UserData, VariationInput, TemplateItem } from "types.slint";
 
 export component Main inherits Window {
     in-out property <bool> logged: false;
@@ -34,7 +34,9 @@ export component Main inherits Window {
     in-out property <string> create-desc: "";
     in-out property <bool> create-include-in-catalog: true;
 
+    in-out property <[TemplateItem]> templates;
     in-out property <string> server-url;
+    callback load-templates();
     callback login(string, string, string);  // (server_url, username, password)
     callback open-product(int);
     callback search(string);
@@ -67,8 +69,8 @@ export component Main inherits Window {
     callback duplicate-product(int);
     // Orders
     callback load-orders();
-    // per-page, order-by, category-break, template
-    callback download-catalog-pdf(string, string, bool, string);
+    // per-page, order-by, category-break, template-id
+    callback download-catalog-pdf(string, string, bool, int);
     callback refresh();
     // Users
     callback load-users();
@@ -94,6 +96,7 @@ export component Main inherits Window {
         NavBar {
             is-admin: root.is-admin;
             cart-count: root.cart-count;
+            templates: root.templates;
             go-catalog => { root.current-view = 0; }
             go-cart => { root.current-view = 2; }
             go-create-product => {

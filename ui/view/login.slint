@@ -56,7 +56,7 @@ export component LoginView inherits Rectangle {
                         width: parent.width;
                         txt: root.server-url;
                         accepted => {
-                            root.login(self.txt, username-input.txt, password-input.txt);
+                            root.login(self.txt, username-input.txt, pw-ti.text);
                         }
                     }
                 }
@@ -74,7 +74,7 @@ export component LoginView inherits Rectangle {
                         placeholder-text: "username";
                         width: parent.width;
                         accepted => {
-                            root.login(server-input.txt, self.txt, password-input.txt);
+                            root.login(server-input.txt, self.txt, pw-ti.text);
                         }
                     }
                 }
@@ -88,36 +88,55 @@ export component LoginView inherits Rectangle {
                         color: #cbd5e1;
                         font-weight: 500;
                     }
-                    HorizontalLayout {
-                        spacing: 6px;
-                        password-input := OneLineInput {
-                            placeholder-text: "parola";
+                    password-input := Rectangle {
+                        width: parent.width;
+                        height: OneLineInputStyles.height;
+                        background: OneLineInputStyles.background;
+                        border-color: OneLineInputStyles.border-color;
+                        border-width: OneLineInputStyles.border-width;
+                        border-radius: OneLineInputStyles.border-radius;
+
+                        if pw-ti.text == "": Text {
+                            x: 10px;
+                            y: (parent.height - self.height) / 2;
+                            text: "parola";
+                            color: OneLineInputStyles.garied-font-color;
+                            font-size: OneLineInputStyles.font-size;
+                        }
+
+                        pw-ti := TextInput {
+                            x: 10px;
+                            width: parent.width - 20px - parent.height;
+                            height: parent.height;
+                            vertical-alignment: center;
+                            font-size: OneLineInputStyles.font-size;
+                            color: OneLineInputStyles.font-color;
                             input-type: root.show-password ? InputType.text : InputType.password;
-                            horizontal-stretch: 1;
                             accepted => {
-                                root.login(server-input.txt, username-input.txt, self.txt);
+                                root.login(server-input.txt, username-input.txt, self.text);
                             }
                         }
-                        // Eye toggle button
+
+                        // Eye toggle — inside the field on the right
                         Rectangle {
-                            width: 38px;
-                            height: password-input.height;
-                            background: #ffffff18;
-                            border-color: #ffffff30;
-                            border-width: 1px;
-                            border-radius: 8px;
+                            x: parent.width - self.width - 4px;
+                            y: (parent.height - self.height) / 2;
+                            width: parent.height - 8px;
+                            height: parent.height - 8px;
+                            border-radius: 4px;
+                            background: eye-touch.has-hover ? #e2e8f0 : transparent;
 
                             Image {
                                 x: (parent.width - self.width) / 2;
                                 y: (parent.height - self.height) / 2;
-                                width: parent.width - 12px;
-                                height: parent.height - 12px;
+                                width: parent.width - 6px;
+                                height: parent.height - 6px;
                                 source: root.show-password ? Icons.eye-off : Icons.eye;
                                 image-fit: contain;
-                                colorize: #cbd5e1;
+                                colorize: #94a3b8;
                             }
 
-                            TouchArea {
+                            eye-touch := TouchArea {
                                 mouse-cursor: pointer;
                                 clicked => { root.show-password = !root.show-password; }
                             }
@@ -133,7 +152,7 @@ export component LoginView inherits Rectangle {
                         width: 180px;
                         height: 44px;
                         clicked => {
-                            root.login(server-input.txt, username-input.txt, password-input.txt);
+                            root.login(server-input.txt, username-input.txt, pw-ti.text);
                         }
                     }
                 }

@@ -15,6 +15,7 @@ export component NavBar inherits Rectangle {
     callback go-users();
     callback search-changed(string);
     callback download-catalog-pdf();
+    callback refresh();
 
     height: is-admin ? NavbarStyle.admin-height : NavbarStyle.height;
     background: NavbarStyle.background;
@@ -122,6 +123,11 @@ export component NavBar inherits Rectangle {
             CustomButton {
                 text: "Catalog PDF";
                 clicked => { root.download-catalog-pdf(); }
+            }
+
+            CustomButton {
+                text: "Reincarca";
+                clicked => { root.refresh(); }
             }
         }
     }

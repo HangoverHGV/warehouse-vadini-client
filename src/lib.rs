@@ -50,7 +50,6 @@ fn to_product_full(p: models::product::ProductData, data_dir: &std::path::Path) 
             dimensions:     v.dimensions.clone().unwrap_or_default().into(),
             packaging:      v.packaging.clone().unwrap_or_default().into(),
             standard:       v.standard.clone().unwrap_or_default().into(),
-            description:    v.description.clone().unwrap_or_default().into(),
             price:          v.price as f32,
             price_total:    format!("{:.2} RON", v.price).into(),
             price_per_unit: price_per_unit(v.packaging.as_deref().unwrap_or(""), v.price).into(),
@@ -608,9 +607,13 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                 if let Some(path) = file {
                     let path_str = path.to_string_lossy().to_string();
                     rt.block_on(async move {
+                        let name = match db::products::get_by_id(&pool, product_id as i64).await {
+                            Ok(Some(p)) => p.name,
+                            _ => String::new(),
+                        };
                         match api::products::update_product_image(
                             &client, &base_url, &token,
-                            product_id as i64, &path_str,
+                            product_id as i64, &name, None, &path_str,
                         ).await {
                             Ok(_) => {
                                 if let Ok(p) = api::products::fetch_one(&client, &base_url, &token, product_id as i64).await {
@@ -678,7 +681,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let data_dir_uv = data_dir.clone();
         let ui_weak = ui.as_weak();
 
-        ui.on_update_variation(move |product_id, variation_id, dims, pack, std_val, desc, price| {
+        ui.on_update_variation(move |product_id, variation_id, dims, pack, std_val, price| {
             let token = match shared_token_uv.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -693,7 +696,6 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                 dimensions: opt_str(&dims),
                 packaging: opt_str(&pack),
                 standard: opt_str(&std_val),
-                description: opt_str(&desc),
                 price: price as f64,
             };
 
@@ -769,7 +771,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let data_dir_av = data_dir.clone();
         let ui_weak = ui.as_weak();
 
-        ui.on_add_variation(move |product_id, dims, pack, std_val, desc, price| {
+        ui.on_add_variation(move |product_id, dims, pack, std_val, price| {
             let token = match shared_token_av.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -784,7 +786,6 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                 dimensions: opt_str(&dims),
                 packaging: opt_str(&pack),
                 standard: opt_str(&std_val),
-                description: opt_str(&desc),
                 price: price as f64,
             };
 
@@ -808,6 +809,43 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                             }
                         }
                         Err(e) => eprintln!("[main] fetch_one after add_variation: {e}"),
+                    }
+                });
+            });
+        });
+    }
+
+    // --- refresh ---
+    {
+        let client_r = client.clone();
+        let rt_r = rt.clone();
+        let base_url_r = base_url.clone();
+        let shared_token_r = shared_token.clone();
+        let pool_r = pool.clone();
+        let data_dir_r = data_dir.clone();
+        let cache_r = cache.clone();
+        let ui_weak = ui.as_weak();
+
+        ui.on_refresh(move || {
+            let token = match shared_token_r.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+            let client = (*client_r).clone();
+            let base_url = base_url_r.clone();
+            let rt = rt_r.clone();
+            let pool = pool_r.clone();
+            let data_dir = data_dir_r.clone();
+            let cache = cache_r.clone();
+            let ui_weak = ui_weak.clone();
+
+            std::thread::spawn(move || {
+                rt.block_on(async move {
+                    if let Err(e) = sync::initial_sync(
+                        &client, &base_url, &token, &pool, &data_dir,
+                        cache, ui_weak,
+                    ).await {
+                        eprintln!("[main] refresh error: {e}");
                     }
                 });
             });

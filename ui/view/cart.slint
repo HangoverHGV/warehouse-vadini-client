@@ -1,6 +1,7 @@
-import { ScrollView, LineEdit } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 import { TableStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
+import { OneLineInput } from "../components/onelineinput.slint";
 import { ButtonType, CartItem } from "../types.slint";
 
 export component CartView inherits Rectangle {
@@ -108,14 +109,6 @@ export component CartView inherits Rectangle {
                         Text {
                             width: 110px;
                             text: "Cantitate";
-                            font-size: TableStyle.font-size;
-                            font-weight: 600;
-                            vertical-alignment: center;
-                            color: TableStyle.font-color;
-                        }
-                        Text {
-                            width: 90px;
-                            text: "Discount";
                             font-size: TableStyle.font-size;
                             font-weight: 600;
                             vertical-alignment: center;
@@ -248,14 +241,6 @@ export component CartView inherits Rectangle {
                             }
                         }
 
-                        Text {
-                            width: 90px;
-                            text: "\{item.item-discount}%";
-                            font-size: TableStyle.font-size;
-                            vertical-alignment: center;
-                            color: TableStyle.font-color;
-                        }
-
                         VerticalLayout {
                             alignment: center;
                             horizontal-stretch: 1;
@@ -319,9 +304,8 @@ export component CartView inherits Rectangle {
                                 vertical-alignment: center;
                                 color: #475569;
                             }
-                            LineEdit {
+                            OneLineInput {
                                 width: 320px;
-                                height: 42px;
                                 placeholder-text: "Nume client";
                                 edited(text) => { root.client-name-val = text; }
                             }
@@ -337,9 +321,8 @@ export component CartView inherits Rectangle {
                                 vertical-alignment: center;
                                 color: #475569;
                             }
-                            LineEdit {
+                            OneLineInput {
                                 width: 320px;
-                                height: 42px;
                                 placeholder-text: "Adresa facturare";
                                 edited(text) => { root.addr-invoice-val = text; }
                             }
@@ -355,30 +338,10 @@ export component CartView inherits Rectangle {
                                 vertical-alignment: center;
                                 color: #475569;
                             }
-                            LineEdit {
+                            OneLineInput {
                                 width: 320px;
-                                height: 42px;
                                 placeholder-text: "Adresa livrare";
                                 edited(text) => { root.addr-delivery-val = text; }
-                            }
-                        }
-
-                        HorizontalLayout {
-                            spacing: 10px;
-                            alignment: start;
-                            Text {
-                                text: "Discount (%):";
-                                width: 140px;
-                                font-size: 14px;
-                                vertical-alignment: center;
-                                color: #475569;
-                            }
-                            LineEdit {
-                                width: 100px;
-                                height: 42px;
-                                placeholder-text: "0";
-                                input-type: number;
-                                edited(text) => { root.discount-val = text.to-float(); }
                             }
                         }
 

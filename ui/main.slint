@@ -49,21 +49,23 @@ export component Main inherits Window {
     callback variation-field-changed(int, string, string, string, string);
     callback clear-create-variations();
     callback delete-product(int);
-    // product-id, variation-id, dims, pack, std, description, price
-    callback update-variation(int, int, string, string, string, string, float);
+    // product-id, variation-id, dims, pack, std, price
+    callback update-variation(int, int, string, string, string, float);
     callback delete-variation(int, int);
-    // product-id, dims, pack, std, description, price
-    callback add-variation(int, string, string, string, string, float);
+    // product-id, dims, pack, std, price
+    callback add-variation(int, string, string, string, float);
     callback change-product-image(int);
     // Orders
     callback load-orders();
     callback download-catalog-pdf();
+    callback refresh();
     // Users
     callback load-users();
     callback create-user(string, string, string, bool, bool);
     callback update-user(int, string, string, bool, bool);
     callback delete-user(int);
 
+    title: "Vadini";
     min-width: 320px;
     background: MainWindowStyle.background;
     icon: @image-url("../Logo.png");
@@ -94,6 +96,7 @@ export component Main inherits Window {
             }
             search-changed(q) => { root.search(q); }
             download-catalog-pdf => { root.download-catalog-pdf(); }
+            refresh => { root.refresh(); }
         }
 
         if current-view == 0: VerticalLayout {
@@ -119,14 +122,14 @@ export component Main inherits Window {
             is-admin: root.is-admin;
             go-back => { root.current-view = 0; }
             add-to-cart(vid) => { root.add-to-cart(vid); }
-            update-variation(vid, d, pk, st, desc, pr) => {
-                root.update-variation(root.selected-product.id, vid, d, pk, st, desc, pr);
+            update-variation(vid, d, pk, st, pr) => {
+                root.update-variation(root.selected-product.id, vid, d, pk, st, pr);
             }
             delete-variation(vid) => {
                 root.delete-variation(root.selected-product.id, vid);
             }
-            add-variation(d, pk, st, desc, pr) => {
-                root.add-variation(root.selected-product.id, d, pk, st, desc, pr);
+            add-variation(d, pk, st, pr) => {
+                root.add-variation(root.selected-product.id, d, pk, st, pr);
             }
             delete-product => {
                 root.delete-product(root.selected-product.id);

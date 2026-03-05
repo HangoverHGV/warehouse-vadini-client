@@ -117,8 +117,6 @@ pub struct VariationUpdate {
     pub packaging: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub standard: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
     pub price: f64,
 }
 
@@ -130,8 +128,6 @@ pub struct NewVariation {
     pub packaging: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub standard: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
     pub price: f64,
 }
 
@@ -251,9 +247,16 @@ pub async fn update_product_image(
     base_url: &str,
     token: &str,
     product_id: i64,
+    name: &str,
+    description: Option<&str>,
     image_path: &str,
 ) -> Result<ProductData, ApiError> {
     let img_data = tokio::fs::read(image_path).await?;
+    let filename = std::path::Path::new(image_path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("image.jpg")
+        .to_string();
     let mime = if image_path.ends_with(".png") {
         "image/png"
     } else if image_path.ends_with(".webp") {
@@ -262,11 +265,18 @@ pub async fn update_product_image(
         "image/jpeg"
     };
 
+    let data_json = serde_json::json!({ "name": name, "description": description }).to_string();
+    let img_part = reqwest::multipart::Part::bytes(img_data)
+        .file_name(filename)
+        .mime_str(mime)?;
+    let form = reqwest::multipart::Form::new()
+        .text("data", data_json)
+        .part("image", img_part);
+
     let res = client
         .put(format!("{base_url}/product/{product_id}"))
         .bearer_auth(token)
-        .header("Content-Type", mime)
-        .body(img_data)
+        .multipart(form)
         .send()
         .await?;
 

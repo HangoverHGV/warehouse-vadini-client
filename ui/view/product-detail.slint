@@ -10,11 +10,11 @@ export component ProductDetail inherits Rectangle {
 
     callback go-back();
     callback add-to-cart(int);
-    // variation-id, dims, pack, std, description, price
-    callback update-variation(int, string, string, string, string, float);
+    // variation-id, dims, pack, std, price
+    callback update-variation(int, string, string, string, float);
     callback delete-variation(int);
-    // dims, pack, std, description, price
-    callback add-variation(string, string, string, string, float);
+    // dims, pack, std, price
+    callback add-variation(string, string, string, float);
     callback delete-product();
     callback change-product-image();
 
@@ -22,11 +22,10 @@ export component ProductDetail inherits Rectangle {
     property <string> new-dims: "";
     property <string> new-pack: "";
     property <string> new-std: "";
-    property <string> new-desc: "";
     property <string> new-price-str: "";
 
     // Minimum table width (sum of visible columns + action)
-    property <length> table-min-width: 950px;
+    property <length> table-min-width: 790px;
 
     VerticalLayout {
         spacing: 0px;
@@ -175,14 +174,6 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                         }
                         Text {
-                            width: TableStyle.col-description;
-                            text: "Descriere";
-                            font-size: TableStyle.font-size;
-                            font-weight: 600;
-                            color: DetailStyle.font-color;
-                            vertical-alignment: center;
-                        }
-                        Text {
                             width: TableStyle.col-price-unit;
                             text: "Pret/unitate";
                             font-size: TableStyle.font-size;
@@ -199,7 +190,6 @@ export component ProductDetail inherits Rectangle {
                     property <string> edit-dims: variation.dimensions;
                     property <string> edit-pack: variation.packaging;
                     property <string> edit-std: variation.standard;
-                    property <string> edit-desc: variation.description;
                     property <string> edit-price: "\{variation.price}";
 
                     height: root.is-admin ? 110px : TableStyle.row-height;
@@ -297,34 +287,6 @@ export component ProductDetail inherits Rectangle {
                         }
 
                         if !root.is-admin: Text {
-                            width: TableStyle.col-description;
-                            text: variation.description;
-                            font-size: TableStyle.font-size;
-                            color: DetailStyle.font-color;
-                            vertical-alignment: center;
-                            wrap: word-wrap;
-                        }
-                        if root.is-admin: VerticalLayout {
-                            width: TableStyle.col-description;
-                            alignment: center;
-                            Rectangle {
-                                height: 30px;
-                                background: #ffffff;
-                                border-color: #cbd5e1;
-                                border-width: 1px;
-                                border-radius: 4px;
-                                TextInput {
-                                    x: 6px; y: (parent.height - self.height) / 2;
-                                    width: parent.width - 12px;
-                                    vertical-alignment: center;
-                                    font-size: TableStyle.font-size;
-                                    color: DetailStyle.font-color;
-                                    text <=> edit-desc;
-                                }
-                            }
-                        }
-
-                        if !root.is-admin: Text {
                             width: TableStyle.col-price-unit;
                             text: variation.price-per-unit;
                             font-size: TableStyle.font-size;
@@ -372,7 +334,6 @@ export component ProductDetail inherits Rectangle {
                                     root.update-variation(
                                         variation.id,
                                         edit-dims, edit-pack, edit-std,
-                                        edit-desc,
                                         edit-price.to-float()
                                     );
                                 }
@@ -441,6 +402,7 @@ export component ProductDetail inherits Rectangle {
                                     width: parent.width - 12px;
                                     vertical-alignment: center;
                                     font-size: TableStyle.font-size;
+                                    color: #1e293b;
                                     text <=> root.new-dims;
                                 }
                             }
@@ -462,6 +424,7 @@ export component ProductDetail inherits Rectangle {
                                     width: parent.width - 12px;
                                     vertical-alignment: center;
                                     font-size: TableStyle.font-size;
+                                    color: #1e293b;
                                     text <=> root.new-pack;
                                 }
                             }
@@ -483,28 +446,8 @@ export component ProductDetail inherits Rectangle {
                                     width: parent.width - 12px;
                                     vertical-alignment: center;
                                     font-size: TableStyle.font-size;
+                                    color: #1e293b;
                                     text <=> root.new-std;
-                                }
-                            }
-                        }
-
-                        VerticalLayout {
-                            spacing: 4px;
-                            alignment: center;
-                            Text { text: "Descriere:"; font-size: 12px; color: #475569; }
-                            Rectangle {
-                                width: TableStyle.col-description;
-                                height: 32px;
-                                background: #ffffff;
-                                border-color: #93c5fd;
-                                border-width: 1px;
-                                border-radius: 4px;
-                                TextInput {
-                                    x: 6px; y: (parent.height - self.height) / 2;
-                                    width: parent.width - 12px;
-                                    vertical-alignment: center;
-                                    font-size: TableStyle.font-size;
-                                    text <=> root.new-desc;
                                 }
                             }
                         }
@@ -525,6 +468,7 @@ export component ProductDetail inherits Rectangle {
                                     width: parent.width - 12px;
                                     vertical-alignment: center;
                                     font-size: TableStyle.font-size;
+                                    color: #1e293b;
                                     input-type: decimal;
                                     text <=> root.new-price-str;
                                 }
@@ -542,14 +486,13 @@ export component ProductDetail inherits Rectangle {
                                 clicked => {
                                     root.add-variation(
                                         root.new-dims, root.new-pack,
-                                        root.new-std, root.new-desc,
+                                        root.new-std,
                                         root.new-price-str.to-float()
                                     );
                                     root.show-add-form = false;
                                     root.new-dims = "";
                                     root.new-pack = "";
                                     root.new-std = "";
-                                    root.new-desc = "";
                                     root.new-price-str = "";
                                 }
                             }

@@ -152,8 +152,9 @@ export component NavBar inherits Rectangle {
                 pdf-popup := PopupWindow {
                     x: 0px;
                     y: parent.height + 4px;
-                    width: 320px;
-                    height: 330px;
+                    width: 360px;
+                    height: 360px;
+                    close-policy: close-on-click-outside;
 
                     Rectangle {
                         width: parent.width;
@@ -178,7 +179,7 @@ export component NavBar inherits Rectangle {
                             HorizontalLayout {
                                 spacing: 8px;
                                 alignment: start;
-                                Text { text: "Per pagina:"; width: 110px; font-size: 13px; color: #475569; vertical-alignment: center; }
+                                Text { text: "Per pagina:"; width: 100px; font-size: 13px; color: #475569; vertical-alignment: center; }
                                 Rectangle {
                                     width: 60px; height: 30px;
                                     background: #ffffff;
@@ -196,16 +197,16 @@ export component NavBar inherits Rectangle {
                                 }
                             }
 
-                            // Sort by
-                            HorizontalLayout {
-                                spacing: 8px;
-                                alignment: start;
-                                Text { text: "Sortare:"; width: 110px; font-size: 13px; color: #475569; vertical-alignment: center; }
+                            // Sort by — label + buttons stacked
+                            VerticalLayout {
+                                spacing: 4px;
+                                Text { text: "Sortare:"; font-size: 13px; color: #475569; }
                                 HorizontalLayout {
-                                    spacing: 3px;
+                                    spacing: 4px;
                                     for opt in ["dimensions", "packaging", "id", "created_at"]: Rectangle {
                                         property <bool> sel: root.pdf-order-by == opt;
-                                        width: 46px; height: 28px;
+                                        horizontal-stretch: 1;
+                                        height: 28px;
                                         background: sel ? #3b82f6 : #f1f5f9;
                                         border-radius: 4px;
                                         Text {
@@ -226,65 +227,61 @@ export component NavBar inherits Rectangle {
                             HorizontalLayout {
                                 spacing: 8px;
                                 alignment: start;
-                                Text { text: "Separare categ.:"; width: 110px; font-size: 13px; color: #475569; vertical-alignment: center; }
+                                Text { text: "Separare categ.:"; width: 100px; font-size: 13px; color: #475569; vertical-alignment: center; }
                                 CheckBox {
                                     checked <=> root.pdf-category-break;
                                 }
                             }
 
-                            // Template selector
-                            HorizontalLayout {
-                                spacing: 8px;
-                                alignment: start;
-                                Text { text: "Template:"; width: 110px; font-size: 13px; color: #475569; vertical-alignment: center; }
-                                Rectangle {
-                                    width: 160px; height: 28px;
-                                    background: #f8fafc;
-                                    border-color: #94a3b8;
-                                    border-width: 1px;
-                                    border-radius: 4px;
+                            // Template — label + scrollable list
+                            VerticalLayout {
+                                spacing: 4px;
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    Text { text: "Template:"; font-size: 13px; color: #475569; vertical-alignment: center; }
                                     Text {
-                                        x: 6px;
-                                        width: parent.width - 12px;
-                                        height: parent.height;
-                                        text: root.pdf-template-name;
+                                        horizontal-stretch: 1;
                                         font-size: 12px;
-                                        color: root.pdf-template-id == 0 ? #94a3b8 : #1e293b;
+                                        color: root.pdf-template-id == 0 ? #94a3b8 : #3b82f6;
+                                        text: root.pdf-template-name;
                                         vertical-alignment: center;
                                         overflow: elide;
                                     }
                                 }
-                            }
+                                Rectangle {
+                                    height: 80px;
+                                    border-color: #e2e8f0;
+                                    border-width: 1px;
+                                    border-radius: 4px;
+                                    clip: true;
+                                    ScrollView {
+                                        width: parent.width;
+                                        height: parent.height;
+                                        viewport-height: templates.length * 28px;
 
-                            // Template list
-                            ScrollView {
-                                height: 70px;
-                                viewport-height: templates.length * 28px;
+                                        VerticalLayout {
+                                            for tmpl in templates: Rectangle {
+                                                property <bool> sel: root.pdf-template-id == tmpl.id;
+                                                height: 28px;
+                                                background: sel ? #eff6ff : (tmpl-touch.has-hover ? #f1f5f9 : #ffffff);
 
-                                VerticalLayout {
-                                    for tmpl in templates: Rectangle {
-                                        property <bool> sel: root.pdf-template-id == tmpl.id;
-                                        height: 28px;
-                                        background: sel ? #eff6ff : (tmpl-touch.has-hover ? #f1f5f9 : #ffffff);
-                                        border-color: sel ? #3b82f6 : #e2e8f0;
-                                        border-width: sel ? 1px : 0px;
-                                        border-radius: 4px;
+                                                Text {
+                                                    x: 8px;
+                                                    width: parent.width - 16px;
+                                                    height: parent.height;
+                                                    text: tmpl.name;
+                                                    font-size: 12px;
+                                                    color: sel ? #3b82f6 : #475569;
+                                                    vertical-alignment: center;
+                                                    overflow: elide;
+                                                }
 
-                                        Text {
-                                            x: 8px;
-                                            width: parent.width - 16px;
-                                            height: parent.height;
-                                            text: tmpl.name;
-                                            font-size: 12px;
-                                            color: sel ? #3b82f6 : #475569;
-                                            vertical-alignment: center;
-                                            overflow: elide;
-                                        }
-
-                                        tmpl-touch := TouchArea {
-                                            clicked => {
-                                                root.pdf-template-id = tmpl.id;
-                                                root.pdf-template-name = tmpl.name;
+                                                tmpl-touch := TouchArea {
+                                                    clicked => {
+                                                        root.pdf-template-id = tmpl.id;
+                                                        root.pdf-template-name = tmpl.name;
+                                                    }
+                                                }
                                             }
                                         }
                                     }

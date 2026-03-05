@@ -18,6 +18,8 @@ pub struct ProductRow {
     pub name: String,
     pub category: String,
     pub image: Option<String>,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
 }
 
 /// Full product with variations — matches server's ProductRead JSON.
@@ -29,6 +31,10 @@ pub struct ProductData {
     pub image: Option<String>,
     #[serde(default)]
     pub variations: Vec<VariationData>,
+    #[serde(default)]
+    pub created_at: Option<String>,
+    #[serde(default)]
+    pub updated_at: Option<String>,
 }
 
 /// Payload sent as a JSON string in the multipart "data" field when creating a product.

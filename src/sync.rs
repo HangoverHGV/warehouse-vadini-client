@@ -93,6 +93,10 @@ pub fn apply_filter_on_ui_thread(ui: &Main, products: &[ProductData], data_dir: 
             b_min.partial_cmp(&a_min).unwrap_or(std::cmp::Ordering::Equal)
         }),
         "Categorie" => filtered.sort_by(|a, b| a.category.cmp(&b.category)),
+        "Creat ↑" => filtered.sort_by(|a, b| a.created_at.cmp(&b.created_at)),
+        "Creat ↓" => filtered.sort_by(|a, b| b.created_at.cmp(&a.created_at)),
+        "Actualizat ↑" => filtered.sort_by(|a, b| a.updated_at.cmp(&b.updated_at)),
+        "Actualizat ↓" => filtered.sort_by(|a, b| b.updated_at.cmp(&a.updated_at)),
         _ => {}
     }
 

@@ -138,21 +138,19 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                         }
                     }
-                    if root.is-admin: HorizontalLayout {
-                        spacing: 6px;
-                        height: 28px;
+                    if root.is-admin: VerticalLayout {
+                        spacing: 4px;
                         Text {
                             text: "Categorie:";
                             font-size: 12px;
                             color: #475569;
-                            vertical-alignment: center;
-                            horizontal-stretch: 0;
                         }
                         SuggestInput {
-                            horizontal-stretch: 1;
+                            width: parent.width;
+                            height: 32px;
                             suggestions: root.categories;
                             value <=> root.edit-category;
-                            font-size: 12px;
+                            font-size: 13px;
                         }
                     }
 
@@ -164,19 +162,16 @@ export component ProductDetail inherits Rectangle {
                         font-weight: DetailStyle.title-font-weight;
                         wrap: word-wrap;
                     }
-                    if root.is-admin: HorizontalLayout {
-                        spacing: 6px;
-                        height: 32px;
+                    if root.is-admin: VerticalLayout {
+                        spacing: 4px;
                         Text {
                             text: "Titlu:";
                             font-size: 12px;
                             color: #475569;
-                            vertical-alignment: center;
-                            horizontal-stretch: 0;
                         }
                         Rectangle {
-                            horizontal-stretch: 1;
-                            height: 32px;
+                            width: parent.width;
+                            height: 36px;
                             background: #ffffff;
                             border-color: #93c5fd;
                             border-width: 1px;

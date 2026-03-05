@@ -26,7 +26,7 @@ export component ProductContainer inherits Rectangle {
 
         // Category badge
         Rectangle {
-            width: ProductContainerStyles.category-width;
+            width: parent.width - 20px;
             height: ProductContainerStyles.category-height;
             background: ProductContainerStyles.category-background;
             border-radius: ProductContainerStyles.category-border-radius;

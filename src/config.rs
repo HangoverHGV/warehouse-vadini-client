@@ -24,7 +24,7 @@ impl Config {
     }
 
     pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let path = Self::config_path();
+        let path = Self::save_path();
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
@@ -56,6 +56,7 @@ impl Config {
         }
     }
 
+    /// Path used for loading — checks user config first, then system fallbacks.
     fn config_path() -> PathBuf {
         #[cfg(target_os = "android")]
         {
@@ -76,11 +77,36 @@ impl Config {
                 let p = PathBuf::from(home).join(".config/warehouse-vadini/config.json");
                 if p.exists() { return p; }
             }
-            // 3. Try /usr/share/warehouse-vadini (installed fallback)
+            // 3. Try /usr/share/warehouse-vadini (installed system default)
             let p = PathBuf::from("/usr/share/warehouse-vadini/config.json");
             if p.exists() { return p; }
 
             // 4. Local fallback
+            std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|p| p.join("config.json")))
+                .unwrap_or_else(|| PathBuf::from("config.json"))
+        }
+    }
+
+    /// Path used for saving — always writes to the user's writable config dir,
+    /// never to system paths like /usr/share which require root.
+    fn save_path() -> PathBuf {
+        #[cfg(target_os = "android")]
+        {
+            crate::ANDROID_DATA_DIR
+                .get()
+                .map(|p| p.join("config.json"))
+                .unwrap_or_else(|| PathBuf::from("/data/data/ro.vadini.warehouse/files/config.json"))
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            if let Ok(cfg_home) = std::env::var("XDG_CONFIG_HOME") {
+                return PathBuf::from(cfg_home).join("warehouse-vadini/config.json");
+            }
+            if let Ok(home) = std::env::var("HOME") {
+                return PathBuf::from(home).join(".config/warehouse-vadini/config.json");
+            }
             std::env::current_exe()
                 .ok()
                 .and_then(|p| p.parent().map(|p| p.join("config.json")))

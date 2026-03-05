@@ -6,11 +6,21 @@ pub async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
             id          INTEGER PRIMARY KEY,
             name        TEXT NOT NULL DEFAULT '',
             category    TEXT DEFAULT '',
-            image       TEXT DEFAULT NULL
+            image       TEXT DEFAULT NULL,
+            created_at  TEXT DEFAULT NULL,
+            updated_at  TEXT DEFAULT NULL
         )",
     )
     .execute(pool)
     .await?;
+
+    // Migrate existing DBs that don't yet have these columns (ignore error if already present)
+    let _ = sqlx::query("ALTER TABLE products ADD COLUMN created_at TEXT DEFAULT NULL")
+        .execute(pool)
+        .await;
+    let _ = sqlx::query("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT NULL")
+        .execute(pool)
+        .await;
 
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS variations (

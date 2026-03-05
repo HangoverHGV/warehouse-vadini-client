@@ -1,4 +1,4 @@
-import { ScrollView } from "std-widgets.slint";
+import { ScrollView, CheckBox } from "std-widgets.slint";
 import { TableStyle, DetailStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
 import { SuggestInput } from "../components/suggest-input.slint";
@@ -74,17 +74,6 @@ export component ProductDetail inherits Rectangle {
                         width: 140px;
                         clicked => {
                             root.update-product-meta(root.edit-name, root.edit-category);
-                        }
-                    }
-                }
-                if root.is-admin: VerticalLayout {
-                    alignment: center;
-                    CustomButton {
-                        text: root.product.include-in-catalog ? "In Catalog ✓" : "Exclus Catalog";
-                        button-type: root.product.include-in-catalog ? ButtonType.Default : ButtonType.Danger;
-                        width: 140px;
-                        clicked => {
-                            root.toggle-include-in-catalog(!root.product.include-in-catalog);
                         }
                     }
                 }
@@ -203,6 +192,21 @@ export component ProductDetail inherits Rectangle {
                                     text <=> root.edit-name;
                                 }
                             }
+                        }
+                    }
+
+                    if root.is-admin: HorizontalLayout {
+                        spacing: 8px;
+                        alignment: start;
+                        Text {
+                            text: "Include in catalog:";
+                            font-size: 13px;
+                            color: #475569;
+                            vertical-alignment: center;
+                        }
+                        CheckBox {
+                            checked: root.product.include-in-catalog;
+                            toggled => { root.toggle-include-in-catalog(self.checked); }
                         }
                     }
                 }

@@ -510,7 +510,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let cache_cp = cache.clone();
         let ui_weak = ui.as_weak();
         let model_cp = create_vars_model.clone();
-        ui.on_create_product(move |name, category, desc, img_path| {
+        ui.on_create_product(move |name, category, desc, img_path, include_in_catalog| {
             let token = match shared_token_cp.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -547,6 +547,14 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                     match api::products::create(&client, &base_url, &token, &product).await {
                         Ok(created) => {
                             eprintln!("[main] product created id={}", created.id);
+                            // If include_in_catalog is false, toggle it (server defaults to true)
+                            if !include_in_catalog {
+                                if let Err(e) = api::products::toggle_include_in_catalog(
+                                    &client, &base_url, &token, created.id, false
+                                ).await {
+                                    eprintln!("[main] toggle_include_in_catalog after create: {e}");
+                                }
+                            }
                             let _ = db::products::upsert(&pool, &created).await;
                             if let Ok(all) = db::products::all(&pool).await {
                                 sync::refresh_ui(all, cache, data_dir, ui_weak.clone());
@@ -1295,7 +1303,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let base_url_pdf = base_url.clone();
         let shared_token_pdf = shared_token.clone();
 
-        ui.on_download_catalog_pdf(move || {
+        ui.on_download_catalog_pdf(move |per_page_str, order_by, category_break, template| {
             let token = match shared_token_pdf.lock().unwrap().clone() {
                 Some(t) => t,
                 None => return,
@@ -1303,10 +1311,13 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
             let client = (*client_pdf).clone();
             let base_url = base_url_pdf.clone();
             let rt = rt_pdf.clone();
+            let per_page: i32 = per_page_str.trim().parse().unwrap_or(3);
+            let order_by = order_by.to_string();
+            let template = template.to_string();
 
             std::thread::spawn(move || {
                 rt.block_on(async move {
-                    match api::products::download_catalog_pdf(&client, &base_url, &token, 3, "price", false, "default").await {
+                    match api::products::download_catalog_pdf(&client, &base_url, &token, per_page, &order_by, category_break, &template).await {
                         Ok(bytes) => {
                             let downloads = std::env::var("HOME")
                                 .or_else(|_| std::env::var("USERPROFILE"))

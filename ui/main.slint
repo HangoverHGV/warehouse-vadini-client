@@ -41,8 +41,8 @@ export component Main inherits Window {
     callback send-order(string, string, string, float);
     callback clear-cart();
     // Product admin
-    // name, category, description, image-path
-    callback create-product(string, string, string, string);
+    // name, category, description, image-path, include-in-catalog
+    callback create-product(string, string, string, string, bool);
     callback select-image-create();
     callback add-variation-row();
     callback remove-variation-row(int);
@@ -62,7 +62,8 @@ export component Main inherits Window {
     callback toggle-include-in-catalog(int, bool);
     // Orders
     callback load-orders();
-    callback download-catalog-pdf();
+    // per-page, order-by, category-break, template
+    callback download-catalog-pdf(string, string, bool, string);
     callback refresh();
     // Users
     callback load-users();
@@ -100,7 +101,7 @@ export component Main inherits Window {
                 root.load-users();
             }
             search-changed(q) => { root.search(q); }
-            download-catalog-pdf => { root.download-catalog-pdf(); }
+            download-catalog-pdf(pp, ob, cb, tmpl) => { root.download-catalog-pdf(pp, ob, cb, tmpl); }
             refresh => { root.refresh(); }
         }
 
@@ -191,8 +192,8 @@ export component Main inherits Window {
             variation-field-changed(i, d, pk, st, pr) => {
                 root.variation-field-changed(i, d, pk, st, pr);
             }
-            create-product(n, c, desc, img) => {
-                root.create-product(n, c, desc, img);
+            create-product(n, c, desc, img, inc) => {
+                root.create-product(n, c, desc, img, inc);
             }
         }
     }

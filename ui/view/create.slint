@@ -1,4 +1,4 @@
-import { ScrollView } from "std-widgets.slint";
+import { ScrollView, CheckBox } from "std-widgets.slint";
 import { TableStyle, ButtonStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
 import { OneLineInput } from "../components/onelineinput.slint";
@@ -7,8 +7,8 @@ import { ButtonType, VariationInput } from "../types.slint";
 
 export component CreateProductView inherits Rectangle {
     callback go-back();
-    // name, category, description, image-path
-    callback create-product(string, string, string, string);
+    // name, category, description, image-path, include-in-catalog
+    callback create-product(string, string, string, string, bool);
     callback select-image();
     callback add-variation-row();
     callback remove-variation-row(int);
@@ -22,6 +22,7 @@ export component CreateProductView inherits Rectangle {
     property <string> name-val: "";
     property <string> category-val: "";
     property <string> desc-val: "";
+    property <bool> include-in-catalog-val: true;
 
     // Minimum width for the variations table
     property <length> variations-min-width: 600px;
@@ -60,7 +61,8 @@ export component CreateProductView inherits Rectangle {
                                 root.name-val,
                                 root.category-val,
                                 root.desc-val,
-                                root.image-path
+                                root.image-path,
+                                root.include-in-catalog-val
                             );
                         }
                     }
@@ -166,6 +168,15 @@ export component CreateProductView inherits Rectangle {
                                     wrap: word-wrap;
                                     width: min(320px, root.width - 200px);
                                 }
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            Text { text: "Include in catalog:"; width: 140px; font-size: 14px; vertical-alignment: center; color: #475569; }
+                            CheckBox {
+                                checked <=> root.include-in-catalog-val;
                             }
                         }
                     }

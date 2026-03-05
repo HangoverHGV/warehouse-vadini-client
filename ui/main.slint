@@ -72,6 +72,7 @@ export component Main inherits Window {
     // per-page, order-by, category-break, template-id
     callback download-catalog-pdf(string, string, bool, int);
     callback refresh();
+    callback logout();
     // Users
     callback load-users();
     callback create-user(string, string, string, bool, bool);
@@ -119,6 +120,7 @@ export component Main inherits Window {
             search-changed(q) => { root.search(q); }
             download-catalog-pdf(pp, ob, cb, tmpl) => { root.download-catalog-pdf(pp, ob, cb, tmpl); }
             refresh => { root.refresh(); }
+            logout => { root.logout(); }
         }
 
         if current-view == 0: VerticalLayout {

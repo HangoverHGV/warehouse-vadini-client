@@ -280,6 +280,22 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         });
     }
 
+    // --- logout ---
+    {
+        let ui_weak = ui.as_weak();
+        let base_url_logout = base_url.clone();
+        let shared_token_logout = shared_token.clone();
+
+        ui.on_logout(move || {
+            let _ = config::Config { base_url: base_url_logout.clone(), token: None, is_admin: false, username: None, password: None }.save();
+            *shared_token_logout.lock().unwrap() = None;
+            let _ = ui_weak.upgrade_in_event_loop(|ui| {
+                ui.set_logged(false);
+                ui.set_is_admin(false);
+            });
+        });
+    }
+
     // --- open-product ---
     {
         let ui_weak = ui.as_weak();

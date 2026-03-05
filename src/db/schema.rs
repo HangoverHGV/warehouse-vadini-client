@@ -7,8 +7,9 @@ pub async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
             name        TEXT NOT NULL DEFAULT '',
             category    TEXT DEFAULT '',
             image       TEXT DEFAULT NULL,
-            created_at  TEXT DEFAULT NULL,
-            updated_at  TEXT DEFAULT NULL
+            created_at          TEXT DEFAULT NULL,
+            updated_at          TEXT DEFAULT NULL,
+            include_in_catalog  INTEGER NOT NULL DEFAULT 1
         )",
     )
     .execute(pool)
@@ -19,6 +20,9 @@ pub async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
         .execute(pool)
         .await;
     let _ = sqlx::query("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT NULL")
+        .execute(pool)
+        .await;
+    let _ = sqlx::query("ALTER TABLE products ADD COLUMN include_in_catalog INTEGER NOT NULL DEFAULT 1")
         .execute(pool)
         .await;
 

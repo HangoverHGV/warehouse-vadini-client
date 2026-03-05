@@ -21,6 +21,7 @@ export component ProductDetail inherits Rectangle {
     callback change-product-image();
     // name, category
     callback update-product-meta(string, string);
+    callback toggle-include-in-catalog(bool);
 
     property <bool> show-add-form: false;
     property <string> new-dims: "";
@@ -73,6 +74,17 @@ export component ProductDetail inherits Rectangle {
                         width: 140px;
                         clicked => {
                             root.update-product-meta(root.edit-name, root.edit-category);
+                        }
+                    }
+                }
+                if root.is-admin: VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: root.product.include-in-catalog ? "In Catalog ✓" : "Exclus Catalog";
+                        button-type: root.product.include-in-catalog ? ButtonType.Default : ButtonType.Danger;
+                        width: 140px;
+                        clicked => {
+                            root.toggle-include-in-catalog(!root.product.include-in-catalog);
                         }
                     }
                 }
@@ -138,19 +150,22 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                         }
                     }
-                    if root.is-admin: VerticalLayout {
-                        spacing: 4px;
-                        Text {
-                            text: "Categorie:";
-                            font-size: 12px;
-                            color: #475569;
-                        }
-                        SuggestInput {
-                            width: parent.width;
-                            height: 32px;
-                            suggestions: root.categories;
-                            value <=> root.edit-category;
-                            font-size: 13px;
+                    if root.is-admin: Rectangle {
+                        width: 400px;
+                        height: 58px;
+                        VerticalLayout {
+                            spacing: 4px;
+                            Text {
+                                text: "Categorie:";
+                                font-size: 12px;
+                                color: #475569;
+                            }
+                            SuggestInput {
+                                height: 32px;
+                                suggestions: root.categories;
+                                value <=> root.edit-category;
+                                font-size: 13px;
+                            }
                         }
                     }
 
@@ -162,28 +177,31 @@ export component ProductDetail inherits Rectangle {
                         font-weight: DetailStyle.title-font-weight;
                         wrap: word-wrap;
                     }
-                    if root.is-admin: VerticalLayout {
-                        spacing: 4px;
-                        Text {
-                            text: "Titlu:";
-                            font-size: 12px;
-                            color: #475569;
-                        }
-                        Rectangle {
-                            width: parent.width;
-                            height: 36px;
-                            background: #ffffff;
-                            border-color: #93c5fd;
-                            border-width: 1px;
-                            border-radius: 4px;
-                            TextInput {
-                                x: 6px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 12px;
-                                vertical-alignment: center;
-                                font-size: DetailStyle.title-font-size;
-                                font-weight: DetailStyle.title-font-weight;
-                                color: DetailStyle.title-color;
-                                text <=> root.edit-name;
+                    if root.is-admin: Rectangle {
+                        width: 400px;
+                        height: 58px;
+                        VerticalLayout {
+                            spacing: 4px;
+                            Text {
+                                text: "Titlu:";
+                                font-size: 12px;
+                                color: #475569;
+                            }
+                            Rectangle {
+                                height: 36px;
+                                background: #ffffff;
+                                border-color: #93c5fd;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: DetailStyle.title-font-size;
+                                    font-weight: DetailStyle.title-font-weight;
+                                    color: DetailStyle.title-color;
+                                    text <=> root.edit-name;
+                                }
                             }
                         }
                     }

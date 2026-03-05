@@ -225,9 +225,19 @@ pub async fn download_catalog_pdf(
     client: &Client,
     base_url: &str,
     token: &str,
+    per_page: i32,
+    order_variant_by: &str,
+    category_break: bool,
+    template: &str,
 ) -> Result<Vec<u8>, ApiError> {
     let res = client
         .get(format!("{base_url}/catalog/pdf"))
+        .query(&[
+            ("per_page", per_page.to_string()),
+            ("order_variant_by", order_variant_by.to_string()),
+            ("category_break", category_break.to_string()),
+            ("template", template.to_string()),
+        ])
         .bearer_auth(token)
         .send()
         .await?;
@@ -289,6 +299,32 @@ pub async fn update_product_image(
     }
 
     Ok(serde_json::from_str(&body)?)
+}
+
+pub async fn toggle_include_in_catalog(
+    client: &Client,
+    base_url: &str,
+    token: &str,
+    product_id: i64,
+    include: bool,
+) -> Result<(), ApiError> {
+    let data_json = serde_json::json!({ "include_in_catalog": include }).to_string();
+    let form = reqwest::multipart::Form::new().text("data", data_json);
+
+    let res = client
+        .put(format!("{base_url}/product/{product_id}"))
+        .bearer_auth(token)
+        .multipart(form)
+        .send()
+        .await?;
+
+    let status = res.status();
+    if !status.is_success() {
+        let body = res.text().await.unwrap_or_default();
+        return Err(format!("toggle_include_in_catalog failed {status}: {body}").into());
+    }
+    eprintln!("[api/products] product {product_id} include_in_catalog={include}");
+    Ok(())
 }
 
 pub async fn update_product_meta(

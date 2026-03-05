@@ -58,6 +58,8 @@ export component Main inherits Window {
     callback change-product-image(int);
     // product-id, name, category
     callback update-product-meta(int, string, string);
+    // product-id, include
+    callback toggle-include-in-catalog(int, bool);
     // Orders
     callback load-orders();
     callback download-catalog-pdf();
@@ -147,6 +149,9 @@ export component Main inherits Window {
             }
             update-product-meta(name, cat) => {
                 root.update-product-meta(root.selected-product.id, name, cat);
+            }
+            toggle-include-in-catalog(include) => {
+                root.toggle-include-in-catalog(root.selected-product.id, include);
             }
         }
 

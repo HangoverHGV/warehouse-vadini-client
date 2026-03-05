@@ -20,6 +20,7 @@ pub struct ProductRow {
     pub image: Option<String>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
+    pub include_in_catalog: bool,
 }
 
 /// Full product with variations — matches server's ProductRead JSON.
@@ -35,7 +36,11 @@ pub struct ProductData {
     pub created_at: Option<String>,
     #[serde(default)]
     pub updated_at: Option<String>,
+    #[serde(default = "crate::models::product::default_true")]
+    pub include_in_catalog: bool,
 }
+
+pub fn default_true() -> bool { true }
 
 /// Payload sent as a JSON string in the multipart "data" field when creating a product.
 #[derive(Serialize, Debug, Clone)]

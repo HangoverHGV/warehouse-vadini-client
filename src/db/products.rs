@@ -14,8 +14,8 @@ pub struct PendingProduct {
 
 pub async fn upsert(pool: &SqlitePool, p: &ProductData) -> Result<(), sqlx::Error> {
     sqlx::query(
-        "INSERT OR REPLACE INTO products (id, name, category, image, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO products (id, name, category, image, created_at, updated_at, include_in_catalog)
+         VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(p.id)
     .bind(&p.name)
@@ -23,6 +23,7 @@ pub async fn upsert(pool: &SqlitePool, p: &ProductData) -> Result<(), sqlx::Erro
     .bind(&p.image)
     .bind(&p.created_at)
     .bind(&p.updated_at)
+    .bind(p.include_in_catalog)
     .execute(pool)
     .await?;
 
@@ -62,7 +63,7 @@ pub async fn delete(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Error> {
 
 pub async fn all(pool: &SqlitePool) -> Result<Vec<ProductData>, sqlx::Error> {
     let rows: Vec<ProductRow> =
-        sqlx::query_as::<_, ProductRow>("SELECT id, name, category, image, created_at, updated_at FROM products")
+        sqlx::query_as::<_, ProductRow>("SELECT id, name, category, image, created_at, updated_at, include_in_catalog FROM products")
             .fetch_all(pool)
             .await?;
 
@@ -88,6 +89,7 @@ pub async fn all(pool: &SqlitePool) -> Result<Vec<ProductData>, sqlx::Error> {
                 variations: vars,
                 created_at: r.created_at,
                 updated_at: r.updated_at,
+                include_in_catalog: r.include_in_catalog,
             }
         })
         .collect();
@@ -161,7 +163,7 @@ pub async fn get_variation_by_id(
 
 pub async fn get_by_id(pool: &SqlitePool, id: i64) -> Result<Option<ProductData>, sqlx::Error> {
     let row: Option<ProductRow> = sqlx::query_as::<_, ProductRow>(
-        "SELECT id, name, category, image, created_at, updated_at FROM products WHERE id = ?",
+        "SELECT id, name, category, image, created_at, updated_at, include_in_catalog FROM products WHERE id = ?",
     )
     .bind(id)
     .fetch_optional(pool)
@@ -187,5 +189,6 @@ pub async fn get_by_id(pool: &SqlitePool, id: i64) -> Result<Option<ProductData>
         variations,
         created_at: r.created_at,
         updated_at: r.updated_at,
+        include_in_catalog: r.include_in_catalog,
     }))
 }

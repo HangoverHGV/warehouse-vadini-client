@@ -67,6 +67,7 @@ fn to_product_full(p: models::product::ProductData, data_dir: &std::path::Path) 
         has_dimensions,
         has_packaging,
         has_standard,
+        include_in_catalog: p.include_in_catalog,
     }
 }
 
@@ -1235,6 +1236,58 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         });
     }
 
+    // --- toggle-include-in-catalog ---
+    {
+        let client_tic = client.clone();
+        let rt_tic = rt.clone();
+        let base_url_tic = base_url.clone();
+        let shared_token_tic = shared_token.clone();
+        let cache_tic = cache.clone();
+        let pool_tic = pool.clone();
+        let ui_handle_tic = ui.as_weak();
+
+        ui.on_toggle_include_in_catalog(move |product_id, include| {
+            let token = match shared_token_tic.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+            let client = (*client_tic).clone();
+            let base_url = base_url_tic.clone();
+            let rt = rt_tic.clone();
+            let cache = cache_tic.clone();
+            let pool = pool_tic.clone();
+            let ui_handle = ui_handle_tic.clone();
+
+            std::thread::spawn(move || {
+                rt.block_on(async move {
+                    match api::products::toggle_include_in_catalog(&client, &base_url, &token, product_id as i64, include).await {
+                        Ok(_) => {
+                            // Fetch updated product and update local DB + cache
+                            match api::products::fetch_one(&client, &base_url, &token, product_id as i64).await {
+                                Ok(p) => {
+                                    let data_dir = config::Config::data_dir();
+                                    let _ = db::products::upsert(&pool, &p).await;
+                                    {
+                                        let mut c = cache.lock().unwrap();
+                                        if let Some(pos) = c.iter().position(|x: &models::product::ProductData| x.id == p.id) {
+                                            c[pos] = p.clone();
+                                        }
+                                    }
+                                    let _ = ui_handle.upgrade_in_event_loop(move |ui| {
+                                        let full = to_product_full(p, &data_dir);
+                                        ui.set_selected_product(full);
+                                    });
+                                }
+                                Err(e) => eprintln!("[main] toggle_include_in_catalog fetch_one error: {e}"),
+                            }
+                        }
+                        Err(e) => eprintln!("[main] toggle_include_in_catalog error: {e}"),
+                    }
+                });
+            });
+        });
+    }
+
     // --- download-catalog-pdf ---
     {
         let client_pdf = client.clone();
@@ -1253,7 +1306,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
 
             std::thread::spawn(move || {
                 rt.block_on(async move {
-                    match api::products::download_catalog_pdf(&client, &base_url, &token).await {
+                    match api::products::download_catalog_pdf(&client, &base_url, &token, 3, "price", false, "default").await {
                         Ok(bytes) => {
                             let downloads = std::env::var("HOME")
                                 .or_else(|_| std::env::var("USERPROFILE"))

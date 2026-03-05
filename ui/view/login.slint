@@ -1,12 +1,14 @@
 import { OneLineInput } from "../components/onelineinput.slint";
-import { LoginStyle } from "../style/defaults.slint";
+import { LoginStyle, OneLineInputStyles } from "../style/defaults.slint";
 import { CustomButton } from "../components/button.slint";
+import { Icons } from "../style/icons.slint";
 
 
 export component LoginView inherits Rectangle {
 
     callback login(string, string, string);  // (server_url, username, password)
     in-out property <string> server-url;
+    property <bool> show-password: false;
 
     background: LoginStyle.background;
 
@@ -86,12 +88,39 @@ export component LoginView inherits Rectangle {
                         color: #cbd5e1;
                         font-weight: 500;
                     }
-                    password-input := OneLineInput {
-                        placeholder-text: "parola";
-                        input-type: password;
-                        width: parent.width;
-                        accepted => {
-                            root.login(server-input.txt, username-input.txt, self.txt);
+                    HorizontalLayout {
+                        spacing: 6px;
+                        password-input := OneLineInput {
+                            placeholder-text: "parola";
+                            input-type: root.show-password ? InputType.text : InputType.password;
+                            horizontal-stretch: 1;
+                            accepted => {
+                                root.login(server-input.txt, username-input.txt, self.txt);
+                            }
+                        }
+                        // Eye toggle button
+                        Rectangle {
+                            width: 38px;
+                            height: password-input.height;
+                            background: #ffffff18;
+                            border-color: #ffffff30;
+                            border-width: 1px;
+                            border-radius: 8px;
+
+                            Image {
+                                x: (parent.width - self.width) / 2;
+                                y: (parent.height - self.height) / 2;
+                                width: parent.width - 12px;
+                                height: parent.height - 12px;
+                                source: root.show-password ? Icons.eye-off : Icons.eye;
+                                image-fit: contain;
+                                colorize: #cbd5e1;
+                            }
+
+                            TouchArea {
+                                mouse-cursor: pointer;
+                                clicked => { root.show-password = !root.show-password; }
+                            }
                         }
                     }
                 }

@@ -231,29 +231,43 @@ export component UsersView inherits Rectangle {
                             Text { text: "\{user.id}"; font-size: TableStyle.font-size; color: TableStyle.font-color; font-weight: 600; }
                         }
 
-                        Rectangle {
+                        VerticalLayout {
                             width: 200px;
-                            height: parent.height;
-                            TextInput {
-                                x: 4px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 8px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                color: TableStyle.font-color;
-                                text <=> edit-name;
+                            alignment: center;
+                            Rectangle {
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #cbd5e1;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: TableStyle.font-color;
+                                    text <=> edit-name;
+                                }
                             }
                         }
 
-                        Rectangle {
+                        VerticalLayout {
                             width: 250px;
-                            height: parent.height;
-                            TextInput {
-                                x: 4px; y: (parent.height - self.height) / 2;
-                                width: parent.width - 8px;
-                                vertical-alignment: center;
-                                font-size: TableStyle.font-size;
-                                color: TableStyle.font-color;
-                                text <=> edit-email;
+                            alignment: center;
+                            Rectangle {
+                                height: 32px;
+                                background: #ffffff;
+                                border-color: #cbd5e1;
+                                border-width: 1px;
+                                border-radius: 4px;
+                                TextInput {
+                                    x: 6px; y: (parent.height - self.height) / 2;
+                                    width: parent.width - 12px;
+                                    vertical-alignment: center;
+                                    font-size: TableStyle.font-size;
+                                    color: TableStyle.font-color;
+                                    text <=> edit-email;
+                                }
                             }
                         }
 

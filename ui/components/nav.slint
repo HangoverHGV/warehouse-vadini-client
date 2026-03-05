@@ -27,9 +27,20 @@ export component NavBar inherits Rectangle {
         padding-right: 12px;
         spacing: 8px;
 
-        // Row 1: Always visible — Catalog + Search (stretching) + Cart
+        // Row 1: Always visible — Logo + Catalog + Search (stretching) + Cart
         HorizontalLayout {
             spacing: 10px;
+
+            // Logo
+            VerticalLayout {
+                alignment: center;
+                Image {
+                    width: ButtonStyles.button-height;
+                    height: ButtonStyles.button-height;
+                    source: @image-url("../../Logo.png");
+                    image-fit: contain;
+                }
+            }
 
             VerticalLayout {
                 alignment: center;

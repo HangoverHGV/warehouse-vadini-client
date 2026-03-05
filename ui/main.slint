@@ -36,6 +36,8 @@ export component Main inherits Window {
 
     in-out property <[TemplateItem]> templates;
     in-out property <string> server-url;
+    in-out property <string> toast-message: "";
+    in-out property <bool> toast-visible: false;
     callback load-templates();
     callback login(string, string, string);  // (server_url, username, password)
     callback open-product(int);
@@ -220,6 +222,37 @@ export component Main inherits Window {
             create-product(n, c, desc, img, inc) => {
                 root.create-product(n, c, desc, img, inc);
             }
+        }
+    }
+
+    // Auto-dismiss toast timer
+    toast-timer := Timer {
+        interval: 3s;
+        running: root.toast-visible;
+        triggered => { root.toast-visible = false; }
+    }
+
+    // Toast notification overlay
+    if toast-visible: Rectangle {
+        z: 100;
+        width: min(380px, root.width - 32px);
+        height: toast-text.preferred-height + 24px;
+        x: (root.width - self.width) / 2;
+        y: root.height - self.height - 24px;
+        background: #1e293b;
+        border-radius: 8px;
+        drop-shadow-blur: 16px;
+        drop-shadow-color: #00000050;
+        drop-shadow-offset-y: 4px;
+
+        toast-text := Text {
+            x: 16px;
+            y: 12px;
+            width: parent.width - 32px;
+            text: root.toast-message;
+            color: #ffffff;
+            font-size: 13px;
+            wrap: word-wrap;
         }
     }
 }

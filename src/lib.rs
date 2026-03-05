@@ -1459,6 +1459,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let rt_pdf = rt.clone();
         let base_url_pdf = base_url.clone();
         let shared_token_pdf = shared_token.clone();
+        let ui_weak_pdf = ui.as_weak();
 
         ui.on_download_catalog_pdf(move |per_page_str, order_by, category_break, template_id| {
             let token = match shared_token_pdf.lock().unwrap().clone() {
@@ -1470,22 +1471,44 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
             let rt = rt_pdf.clone();
             let per_page: i32 = per_page_str.trim().parse().unwrap_or(3);
             let order_by = order_by.to_string();
+            let ui_weak = ui_weak_pdf.clone();
 
             std::thread::spawn(move || {
                 rt.block_on(async move {
+                    let show_toast = move |msg: String| {
+                        let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                            ui.set_toast_visible(false); // reset timer if already showing
+                            ui.set_toast_message(msg.into());
+                            ui.set_toast_visible(true);
+                        });
+                    };
+
                     match api::products::download_catalog_pdf(&client, &base_url, &token, per_page, &order_by, category_break, template_id as i64).await {
                         Ok(bytes) => {
+                            #[cfg(target_os = "android")]
+                            let downloads = std::path::PathBuf::from("/sdcard/Download");
+                            #[cfg(not(target_os = "android"))]
                             let downloads = std::env::var("HOME")
                                 .or_else(|_| std::env::var("USERPROFILE"))
                                 .map(|h| std::path::PathBuf::from(h).join("Downloads"))
                                 .unwrap_or_else(|_| std::path::PathBuf::from("."));
+
                             let path = downloads.join("catalog.pdf");
                             match tokio::fs::write(&path, &bytes).await {
-                                Ok(_) => eprintln!("[main] catalog PDF saved to {}", path.display()),
-                                Err(e) => eprintln!("[main] failed to save PDF: {e}"),
+                                Ok(_) => {
+                                    eprintln!("[main] catalog PDF saved to {}", path.display());
+                                    show_toast(format!("PDF salvat in: {}", path.display()));
+                                }
+                                Err(e) => {
+                                    eprintln!("[main] failed to save PDF: {e}");
+                                    show_toast(format!("Eroare salvare PDF: {e}"));
+                                }
                             }
                         }
-                        Err(e) => eprintln!("[main] download_catalog_pdf error: {e}"),
+                        Err(e) => {
+                            eprintln!("[main] download_catalog_pdf error: {e}");
+                            show_toast(format!("Eroare descarcare PDF: {e}"));
+                        }
                     }
                 });
             });

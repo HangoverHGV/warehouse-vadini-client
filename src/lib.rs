@@ -163,6 +163,8 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         let data_dir2 = data_dir.clone();
         let shared_token2 = shared_token.clone();
         let cache2 = cache.clone();
+        let stored_username = cfg.username.clone();
+        let stored_password = cfg.password.clone();
 
         std::thread::spawn(move || {
             let result = rt2.block_on(auth::login::check_login(&client2, &me_url, &token));
@@ -170,7 +172,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                 Ok(new_token) => {
                     let final_token = new_token.unwrap_or(old_token);
                     let is_admin = rt2.block_on(check_admin(&client2, &base_url2, &final_token));
-                    let _ = config::Config { base_url: base_url2.clone(), token: Some(final_token.clone()), is_admin }.save();
+                    let _ = config::Config { base_url: base_url2.clone(), token: Some(final_token.clone()), is_admin, username: stored_username, password: stored_password }.save();
                     *shared_token2.lock().unwrap() = Some(final_token.clone());
                     let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
                         ui.set_is_admin(is_admin);
@@ -187,10 +189,37 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                         // No network — stay logged in with cached data
                         eprintln!("[auth] no network, staying logged in offline");
                         *shared_token2.lock().unwrap() = Some(old_token);
+                    } else if let (Some(uname), Some(pwd)) = (stored_username, stored_password) {
+                        // Token expired — silently re-login with stored credentials
+                        eprintln!("[auth] token expired, auto-logging in");
+                        let login_url = format!("{base_url2}/user/token");
+                        let login_result = rt2.block_on(auth::login::login(&client2, &login_url, &uname, &pwd));
+                        match login_result {
+                            Ok(r) if r.access_token.is_some() => {
+                                let new_token = r.access_token.unwrap();
+                                let is_admin = rt2.block_on(check_admin(&client2, &base_url2, &new_token));
+                                let _ = config::Config { base_url: base_url2.clone(), token: Some(new_token.clone()), is_admin, username: Some(uname), password: Some(pwd) }.save();
+                                *shared_token2.lock().unwrap() = Some(new_token.clone());
+                                let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
+                                    ui.set_is_admin(is_admin);
+                                    ui.invoke_load_templates();
+                                });
+                                start_sync(rt2, client2, pool2, base_url2, new_token, data_dir2, cache2, ui_weak);
+                            }
+                            _ => {
+                                // Credentials no longer valid — force re-login
+                                eprintln!("[auth] auto-login failed, showing login screen");
+                                let _ = config::Config { base_url: base_url2, token: None, is_admin: false, username: None, password: None }.save();
+                                let _ = ui_weak.upgrade_in_event_loop(|ui| {
+                                    ui.set_logged(false);
+                                    ui.set_is_admin(false);
+                                });
+                            }
+                        }
                     } else {
-                        // Token truly rejected — force re-login
-                        eprintln!("[auth] token invalid: {e}");
-                        let _ = config::Config { base_url: base_url2, token: None, is_admin: false }.save();
+                        // No stored credentials — force re-login
+                        eprintln!("[auth] token invalid, no credentials stored: {e}");
+                        let _ = config::Config { base_url: base_url2, token: None, is_admin: false, username: None, password: None }.save();
                         let _ = ui_weak.upgrade_in_event_loop(|ui| {
                             ui.set_logged(false);
                             ui.set_is_admin(false);
@@ -235,7 +264,7 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                     Ok(r) if r.access_token.is_some() => {
                         let token = r.access_token.unwrap();
                         let is_admin = rt.block_on(check_admin(&client, &base_url, &token));
-                        let _ = config::Config { base_url: base_url.clone(), token: Some(token.clone()), is_admin }.save();
+                        let _ = config::Config { base_url: base_url.clone(), token: Some(token.clone()), is_admin, username: Some(username.clone()), password: Some(password.clone()) }.save();
                         *shared_token.lock().unwrap() = Some(token.clone());
                         let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
                             ui.set_logged(true);

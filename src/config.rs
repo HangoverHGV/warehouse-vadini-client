@@ -8,6 +8,10 @@ pub struct Config {
     pub token: Option<String>,
     #[serde(default)]
     pub is_admin: bool,
+    #[serde(default)]
+    pub username: Option<String>,
+    #[serde(default)]
+    pub password: Option<String>,
 }
 
 impl Config {
@@ -20,6 +24,8 @@ impl Config {
                 base_url: "https://warehouse.sudurasimontaj.com".to_string(),
                 token: None,
                 is_admin: false,
+                username: None,
+                password: None,
             })
     }
 

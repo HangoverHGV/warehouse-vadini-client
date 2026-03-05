@@ -1,7 +1,12 @@
 APP     := Warehouse
 PKG     := warehouse-vadini
-DIST    := dist
+# All final artifacts go here
+BUILD   := build
 VERSION := 0.1.0
+
+# Attempt to locate NDK if not set
+export NDK_HOME ?= /opt/android-sdk/ndk-bundle
+export ANDROID_HOME ?= /opt/android-sdk
 
 .PHONY: all linux installer android clean help
 
@@ -17,32 +22,30 @@ all: linux installer android
 # ── Native Linux / CachyOS ────────────────────────────────────────────────────
 linux:
 	cargo build --release --features desktop
-	mkdir -p $(DIST)
-	tar -czf $(DIST)/$(PKG)-linux-x86_64.tar.gz \
+	mkdir -p $(BUILD)
+	tar -czf $(BUILD)/$(PKG)-linux-x86_64.tar.gz \
 	    -C target/release $(APP) \
 	    --transform 's|^|$(PKG)/|'
-	cp config.json $(DIST)/
-	@echo "→ $(DIST)/$(PKG)-linux-x86_64.tar.gz"
+	cp config.json $(BUILD)/
+	@echo "→ $(BUILD)/$(PKG)-linux-x86_64.tar.gz"
 
 # ── CachyOS/Arch Installer ───────────────────────────────────────────────────
-# Requires: makepkg (standard on Arch/CachyOS)
+# We use a custom BUILDDIR to avoid makepkg using the project root and its 'src' folder
 installer: linux
-	rm -rf pkg src/
-	makepkg -ef
-	mkdir -p $(DIST)
-	mv $(PKG)-$(VERSION)-1-x86_64.pkg.tar.zst $(DIST)/
-	@echo "→ $(DIST)/$(PKG)-$(VERSION)-1-x86_64.pkg.tar.zst"
-	@echo "Install with: sudo pacman -U $(DIST)/$(PKG)-$(VERSION)-1-x86_64.pkg.tar.zst"
+	mkdir -p build-pkg
+	BUILDDIR=$(shell pwd)/build-pkg makepkg -ef
+	mkdir -p $(BUILD)
+	mv $(PKG)-$(VERSION)-1-x86_64.pkg.tar.zst $(BUILD)/
+	@echo "→ $(BUILD)/$(PKG)-$(VERSION)-1-x86_64.pkg.tar.zst"
 
 # ── Android APK ───────────────────────────────────────────────────────────────
-# Prerequisites: cargo-apk, NDK_HOME, ANDROID_HOME
 android:
 	cargo apk build --release --lib
-	mkdir -p $(DIST)
-	find target/release/apk -name "warehouse.apk" -exec cp {} $(DIST)/$(PKG).apk \;
-	@echo "→ $(DIST)/$(PKG).apk"
+	mkdir -p $(BUILD)
+	cp target/release/apk/warehouse.apk $(BUILD)/$(PKG).apk
+	@echo "→ $(BUILD)/$(PKG).apk"
 
 # ── Clean ─────────────────────────────────────────────────────────────────────
 clean:
 	cargo clean
-	rm -rf $(DIST) pkg src/
+	rm -rf $(BUILD) pkg src-pkg build-pkg dist/

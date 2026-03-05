@@ -22,6 +22,7 @@ export component ProductDetail inherits Rectangle {
     // name, category
     callback update-product-meta(string, string);
     callback toggle-include-in-catalog(bool);
+    callback duplicate-product();
 
     property <bool> show-add-form: false;
     property <string> new-dims: "";
@@ -55,6 +56,14 @@ export component ProductDetail inherits Rectangle {
                         text: "< Inapoi";
                         width: 100px;
                         clicked => { root.go-back(); }
+                    }
+                }
+                if root.is-admin: VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "Duplica Produs";
+                        width: 140px;
+                        clicked => { root.duplicate-product(); }
                     }
                 }
                 if root.is-admin: VerticalLayout {

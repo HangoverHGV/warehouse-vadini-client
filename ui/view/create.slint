@@ -19,10 +19,10 @@ export component CreateProductView inherits Rectangle {
     in-out property <string> image-path: "";
     in-out property <[VariationInput]> variation-list;
 
-    property <string> name-val: "";
-    property <string> category-val: "";
-    property <string> desc-val: "";
-    property <bool> include-in-catalog-val: true;
+    in-out property <string> name-val: "";
+    in-out property <string> category-val: "";
+    in-out property <string> desc-val: "";
+    in-out property <bool> include-in-catalog-val: true;
 
     // Minimum width for the variations table
     property <length> variations-min-width: 600px;

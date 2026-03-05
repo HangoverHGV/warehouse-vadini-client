@@ -29,6 +29,10 @@ export component Main inherits Window {
     in-out property <[UserData]> users;
     in-out property <string> create-image-path: "";
     in-out property <[VariationInput]> create-variations;
+    in-out property <string> create-name: "";
+    in-out property <string> create-category: "";
+    in-out property <string> create-desc: "";
+    in-out property <bool> create-include-in-catalog: true;
 
     in-out property <string> server-url;
     callback login(string, string, string);  // (server_url, username, password)
@@ -60,6 +64,7 @@ export component Main inherits Window {
     callback update-product-meta(int, string, string);
     // product-id, include
     callback toggle-include-in-catalog(int, bool);
+    callback duplicate-product(int);
     // Orders
     callback load-orders();
     // per-page, order-by, category-break, template
@@ -91,7 +96,15 @@ export component Main inherits Window {
             cart-count: root.cart-count;
             go-catalog => { root.current-view = 0; }
             go-cart => { root.current-view = 2; }
-            go-create-product => { root.current-view = 5; }
+            go-create-product => {
+                root.create-name = "";
+                root.create-category = "";
+                root.create-desc = "";
+                root.create-include-in-catalog = true;
+                root.create-image-path = "";
+                root.clear-create-variations();
+                root.current-view = 5;
+            }
             go-orders => {
                 root.current-view = 3;
                 root.load-orders();
@@ -154,6 +167,9 @@ export component Main inherits Window {
             toggle-include-in-catalog(include) => {
                 root.toggle-include-in-catalog(root.selected-product.id, include);
             }
+            duplicate-product => {
+                root.duplicate-product(root.selected-product.id);
+            }
         }
 
         if current-view == 2: CartView {
@@ -185,6 +201,10 @@ export component Main inherits Window {
             categories: root.categories;
             image-path <=> root.create-image-path;
             variation-list <=> root.create-variations;
+            name-val <=> root.create-name;
+            category-val <=> root.create-category;
+            desc-val <=> root.create-desc;
+            include-in-catalog-val <=> root.create-include-in-catalog;
             go-back => { root.current-view = 0; }
             select-image => { root.select-image-create(); }
             add-variation-row => { root.add-variation-row(); }

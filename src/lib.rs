@@ -1296,6 +1296,79 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         });
     }
 
+    // --- duplicate-product ---
+    {
+        let cache_dup = cache.clone();
+        let pool_dup = pool.clone();
+        let rt_dup = rt.clone();
+        let data_dir_dup = data_dir.clone();
+        let ui_handle_dup = ui.as_weak();
+
+        ui.on_duplicate_product(move |product_id| {
+            let cache = cache_dup.clone();
+            let pool = pool_dup.clone();
+            let rt = rt_dup.clone();
+            let data_dir = data_dir_dup.clone();
+            let ui_handle = ui_handle_dup.clone();
+
+            let cached = cache.lock().unwrap().iter().find(|p| p.id == product_id as i64).cloned();
+
+            std::thread::spawn(move || {
+                let product = if let Some(p) = cached {
+                    Some(p)
+                } else {
+                    rt.block_on(async { db::products::get_by_id(&pool, product_id as i64).await.ok().flatten() })
+                };
+
+                let product = match product {
+                    Some(p) => p,
+                    None => {
+                        eprintln!("[main] duplicate_product: product {} not found", product_id);
+                        return;
+                    }
+                };
+
+                let image_path_str = product.image
+                    .as_deref()
+                    .map(|id| images::local_path(&data_dir, id))
+                    .filter(|p| p.exists())
+                    .and_then(|p| p.to_str().map(|s| s.to_owned()))
+                    .unwrap_or_default();
+
+                let variations: Vec<VariationInput> = product.variations.iter().map(|v| VariationInput {
+                    dims: v.dimensions.clone().unwrap_or_default().into(),
+                    pack: v.packaging.clone().unwrap_or_default().into(),
+                    std: v.standard.clone().unwrap_or_default().into(),
+                    price: format!("{:.2}", v.price).into(),
+                }).collect();
+
+                let name = product.name.clone();
+                let category = product.category.clone();
+                let include_in_catalog = product.include_in_catalog;
+
+                let _ = ui_handle.upgrade_in_event_loop(move |ui| {
+                    ui.set_create_name(name.into());
+                    ui.set_create_category(category.into());
+                    ui.set_create_desc("".into());
+                    ui.set_create_image_path(image_path_str.into());
+                    ui.set_create_include_in_catalog(include_in_catalog);
+                    // Downcast the existing ModelRc to avoid Rc<VecModel> Send issues
+                    if let Some(vec_model) = ui.get_create_variations()
+                        .as_any()
+                        .downcast_ref::<slint::VecModel<VariationInput>>()
+                    {
+                        vec_model.set_vec(if variations.is_empty() {
+                            vec![VariationInput::default()]
+                        } else {
+                            variations
+                        });
+                    }
+                    ui.set_current_view(5);
+                });
+            });
+        });
+    }
+
     // --- download-catalog-pdf ---
     {
         let client_pdf = client.clone();

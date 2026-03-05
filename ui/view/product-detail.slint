@@ -7,6 +7,7 @@ import { Icons } from "../style/icons.slint";
 export component ProductDetail inherits Rectangle {
     in property <ProductFull> product;
     in property <bool> is-admin: false;
+    in property <[string]> categories: [];
 
     callback go-back();
     callback add-to-cart(int);
@@ -17,12 +18,16 @@ export component ProductDetail inherits Rectangle {
     callback add-variation(string, string, string, float);
     callback delete-product();
     callback change-product-image();
+    // name, category
+    callback update-product-meta(string, string);
 
     property <bool> show-add-form: false;
     property <string> new-dims: "";
     property <string> new-pack: "";
     property <string> new-std: "";
     property <string> new-price-str: "";
+    property <string> edit-name: product.name;
+    property <string> edit-category: product.category;
 
     // Minimum table width (sum of visible columns + action)
     property <length> table-min-width: 790px;
@@ -57,6 +62,17 @@ export component ProductDetail inherits Rectangle {
                         button-type: ButtonType.Danger;
                         width: 140px;
                         clicked => { root.delete-product(); }
+                    }
+                }
+                if root.is-admin: VerticalLayout {
+                    alignment: center;
+                    CustomButton {
+                        text: "Salveaza Produs";
+                        button-type: ButtonType.Success;
+                        width: 140px;
+                        clicked => {
+                            root.update-product-meta(root.edit-name, root.edit-category);
+                        }
                     }
                 }
             }
@@ -103,7 +119,9 @@ export component ProductDetail inherits Rectangle {
                     alignment: start;
                     spacing: 8px;
                     horizontal-stretch: 1;
-                    Rectangle {
+
+                    // Category: badge (read-only) or text input (admin)
+                    if !root.is-admin: Rectangle {
                         width: 140px;
                         height: 26px;
                         background: #3b82f6;
@@ -119,12 +137,68 @@ export component ProductDetail inherits Rectangle {
                             vertical-alignment: center;
                         }
                     }
-                    Text {
+                    if root.is-admin: HorizontalLayout {
+                        spacing: 6px;
+                        alignment: start;
+                        Text {
+                            text: "Categorie:";
+                            font-size: 12px;
+                            color: #475569;
+                            vertical-alignment: center;
+                        }
+                        Rectangle {
+                            width: 200px;
+                            height: 28px;
+                            background: #ffffff;
+                            border-color: #93c5fd;
+                            border-width: 1px;
+                            border-radius: 4px;
+                            TextInput {
+                                x: 6px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 12px;
+                                vertical-alignment: center;
+                                font-size: 12px;
+                                color: #1e293b;
+                                text <=> root.edit-category;
+                            }
+                        }
+                    }
+
+                    // Title: static text (read-only) or text input (admin)
+                    if !root.is-admin: Text {
                         text: product.name;
                         color: DetailStyle.title-color;
                         font-size: DetailStyle.title-font-size;
                         font-weight: DetailStyle.title-font-weight;
                         wrap: word-wrap;
+                    }
+                    if root.is-admin: HorizontalLayout {
+                        spacing: 6px;
+                        height: 32px;
+                        Text {
+                            text: "Titlu:";
+                            font-size: 12px;
+                            color: #475569;
+                            vertical-alignment: center;
+                            horizontal-stretch: 0;
+                        }
+                        Rectangle {
+                            horizontal-stretch: 1;
+                            height: 32px;
+                            background: #ffffff;
+                            border-color: #93c5fd;
+                            border-width: 1px;
+                            border-radius: 4px;
+                            TextInput {
+                                x: 6px; y: (parent.height - self.height) / 2;
+                                width: parent.width - 12px;
+                                vertical-alignment: center;
+                                font-size: DetailStyle.title-font-size;
+                                font-weight: DetailStyle.title-font-weight;
+                                color: DetailStyle.title-color;
+                                text <=> root.edit-name;
+                            }
+                        }
                     }
                 }
             }

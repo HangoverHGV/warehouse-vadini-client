@@ -149,6 +149,10 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
 
     // --- Verify stored token on startup ---
     if let Some(old_token) = stored_token {
+        // Immediately show the app using cached credentials — no login flash
+        ui.set_logged(true);
+        ui.set_is_admin(cfg.is_admin);
+
         let ui_weak = ui.as_weak();
         let client2 = (*client).clone();
         let base_url2 = base_url.clone();
@@ -164,11 +168,10 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
             match result {
                 Ok(new_token) => {
                     let final_token = new_token.unwrap_or(old_token);
-                    let _ = config::Config { base_url: base_url2.clone(), token: Some(final_token.clone()) }.save();
-                    *shared_token2.lock().unwrap() = Some(final_token.clone());
                     let is_admin = rt2.block_on(check_admin(&client2, &base_url2, &final_token));
+                    let _ = config::Config { base_url: base_url2.clone(), token: Some(final_token.clone()), is_admin }.save();
+                    *shared_token2.lock().unwrap() = Some(final_token.clone());
                     let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
-                        ui.set_logged(true);
                         ui.set_is_admin(is_admin);
                     });
                     start_sync(rt2, client2, pool2, base_url2, final_token, data_dir2, cache2, ui_weak);
@@ -179,14 +182,17 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                         .map(|re| re.is_connect() || re.is_timeout())
                         .unwrap_or(false);
                     if is_network_err {
-                        eprintln!("[auth] no network, skipping token check — logging in offline");
+                        // No network — stay logged in with cached data
+                        eprintln!("[auth] no network, staying logged in offline");
                         *shared_token2.lock().unwrap() = Some(old_token);
-                        let _ = ui_weak.upgrade_in_event_loop(move |ui| {
-                            ui.set_logged(true);
-                        });
                     } else {
+                        // Token truly rejected — force re-login
                         eprintln!("[auth] token invalid: {e}");
-                        let _ = config::Config { base_url: base_url2, token: None }.save();
+                        let _ = config::Config { base_url: base_url2, token: None, is_admin: false }.save();
+                        let _ = ui_weak.upgrade_in_event_loop(|ui| {
+                            ui.set_logged(false);
+                            ui.set_is_admin(false);
+                        });
                     }
                 }
             }
@@ -226,9 +232,9 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                 match result {
                     Ok(r) if r.access_token.is_some() => {
                         let token = r.access_token.unwrap();
-                        let _ = config::Config { base_url: base_url.clone(), token: Some(token.clone()) }.save();
-                        *shared_token.lock().unwrap() = Some(token.clone());
                         let is_admin = rt.block_on(check_admin(&client, &base_url, &token));
+                        let _ = config::Config { base_url: base_url.clone(), token: Some(token.clone()), is_admin }.save();
+                        *shared_token.lock().unwrap() = Some(token.clone());
                         let _ = ui_weak.clone().upgrade_in_event_loop(move |ui| {
                             ui.set_logged(true);
                             ui.set_is_admin(is_admin);
@@ -633,6 +639,60 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
                         }
                     });
                 }
+            });
+        });
+    }
+
+    // --- update-product-meta (name + category) ---
+    {
+        let client_upm = client.clone();
+        let rt_upm = rt.clone();
+        let base_url_upm = base_url.clone();
+        let shared_token_upm = shared_token.clone();
+        let pool_upm = pool.clone();
+        let data_dir_upm = data_dir.clone();
+        let cache_upm = cache.clone();
+        let ui_weak = ui.as_weak();
+
+        ui.on_update_product_meta(move |product_id, name, category| {
+            let token = match shared_token_upm.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+            let client = (*client_upm).clone();
+            let base_url = base_url_upm.clone();
+            let rt = rt_upm.clone();
+            let pool = pool_upm.clone();
+            let data_dir = data_dir_upm.clone();
+            let cache = cache_upm.clone();
+            let ui_weak = ui_weak.clone();
+            let name = name.to_string();
+            let category = category.to_string();
+
+            std::thread::spawn(move || {
+                rt.block_on(async move {
+                    match api::products::update_product_meta(
+                        &client, &base_url, &token,
+                        product_id as i64, &name, &category,
+                    ).await {
+                        Ok(()) => {
+                            if let Ok(p) = api::products::fetch_one(&client, &base_url, &token, product_id as i64).await {
+                                let _ = db::products::upsert(&pool, &p).await;
+                                if let Ok(Some(p2)) = db::products::get_by_id(&pool, product_id as i64).await {
+                                    let data_dir2 = data_dir.clone();
+                                    let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                                        let full = crate::to_product_full(p2, &data_dir2);
+                                        ui.set_selected_product(full);
+                                    });
+                                }
+                                if let Ok(all) = db::products::all(&pool).await {
+                                    sync::refresh_ui(all, cache, data_dir, ui_weak);
+                                }
+                            }
+                        }
+                        Err(e) => eprintln!("[main] update_product_meta error: {e}"),
+                    }
+                });
             });
         });
     }

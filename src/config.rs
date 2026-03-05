@@ -6,6 +6,8 @@ pub struct Config {
     pub base_url: String,
     #[serde(default)]
     pub token: Option<String>,
+    #[serde(default)]
+    pub is_admin: bool,
 }
 
 impl Config {
@@ -17,6 +19,7 @@ impl Config {
             .unwrap_or_else(|| Config {
                 base_url: "https://warehouse.sudurasimontaj.com".to_string(),
                 token: None,
+                is_admin: false,
             })
     }
 

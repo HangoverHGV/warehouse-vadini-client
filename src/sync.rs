@@ -69,17 +69,39 @@ pub fn apply_filter_on_ui_thread(ui: &Main, products: &[ProductData], data_dir: 
     ui.set_categories(Rc::new(slint::VecModel::from(cats)).into());
 
     // Filter and convert
-    let filtered: Vec<ProductDetails> = products
+    let mut filtered: Vec<ProductData> = products
         .iter()
         .filter(|p| {
             let name_ok = query.is_empty() || p.name.to_lowercase().contains(&query);
             let cat_ok = category.is_empty() || category == "Tot" || p.category == category;
             name_ok && cat_ok
         })
-        .map(|p| to_slint(p.clone(), data_dir))
+        .cloned()
         .collect();
 
-    ui.set_products(Rc::new(slint::VecModel::from(filtered)).into());
+    // Sort
+    let sort_by = ui.get_sort_by().to_string();
+    match sort_by.as_str() {
+        "Pret ↑" => filtered.sort_by(|a, b| {
+            let a_min = a.variations.iter().map(|v| v.price).fold(f64::MAX, f64::min);
+            let b_min = b.variations.iter().map(|v| v.price).fold(f64::MAX, f64::min);
+            a_min.partial_cmp(&b_min).unwrap_or(std::cmp::Ordering::Equal)
+        }),
+        "Pret ↓" => filtered.sort_by(|a, b| {
+            let a_min = a.variations.iter().map(|v| v.price).fold(f64::MAX, f64::min);
+            let b_min = b.variations.iter().map(|v| v.price).fold(f64::MAX, f64::min);
+            b_min.partial_cmp(&a_min).unwrap_or(std::cmp::Ordering::Equal)
+        }),
+        "Categorie" => filtered.sort_by(|a, b| a.category.cmp(&b.category)),
+        _ => {}
+    }
+
+    let slint_products: Vec<ProductDetails> = filtered
+        .into_iter()
+        .map(|p| to_slint(p, data_dir))
+        .collect();
+
+    ui.set_products(Rc::new(slint::VecModel::from(slint_products)).into());
 }
 
 /// Called from background threads — schedules filter application via event loop.

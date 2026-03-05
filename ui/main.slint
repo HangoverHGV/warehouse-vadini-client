@@ -20,6 +20,7 @@ export component Main inherits Window {
     in-out property <[string]> categories: ["Tot"];
     in-out property <string> search-query: "";
     in-out property <string> filter-category: "Tot";
+    in-out property <string> sort-by: "Pret ↑";
     in-out property <ProductFull> selected-product;
     in-out property <[CartItem]> cart-items;
     in-out property <int> cart-count: 0;
@@ -55,6 +56,8 @@ export component Main inherits Window {
     // product-id, dims, pack, std, price
     callback add-variation(int, string, string, string, float);
     callback change-product-image(int);
+    // product-id, name, category
+    callback update-product-meta(int, string, string);
     // Orders
     callback load-orders();
     callback download-catalog-pdf();
@@ -105,6 +108,10 @@ export component Main inherits Window {
             Filter {
                 categories: root.categories;
                 category-selected(cat) => { root.filter-changed(cat); }
+                sort-changed(val) => {
+                    root.sort-by = val;
+                    root.filter-changed(root.filter-category);
+                }
             }
 
             ScrollView {
@@ -120,6 +127,7 @@ export component Main inherits Window {
         if current-view == 1: ProductDetail {
             product: root.selected-product;
             is-admin: root.is-admin;
+            categories: root.categories;
             go-back => { root.current-view = 0; }
             add-to-cart(vid) => { root.add-to-cart(vid); }
             update-variation(vid, d, pk, st, pr) => {
@@ -136,6 +144,9 @@ export component Main inherits Window {
             }
             change-product-image => {
                 root.change-product-image(root.selected-product.id);
+            }
+            update-product-meta(name, cat) => {
+                root.update-product-meta(root.selected-product.id, name, cat);
             }
         }
 

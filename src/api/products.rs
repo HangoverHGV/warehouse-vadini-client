@@ -290,3 +290,30 @@ pub async fn update_product_image(
 
     Ok(serde_json::from_str(&body)?)
 }
+
+pub async fn update_product_meta(
+    client: &Client,
+    base_url: &str,
+    token: &str,
+    product_id: i64,
+    name: &str,
+    category: &str,
+) -> Result<(), ApiError> {
+    let data_json = serde_json::json!({ "name": name, "category": category }).to_string();
+    let form = reqwest::multipart::Form::new().text("data", data_json);
+
+    let res = client
+        .put(format!("{base_url}/product/{product_id}"))
+        .bearer_auth(token)
+        .multipart(form)
+        .send()
+        .await?;
+
+    let status = res.status();
+    if !status.is_success() {
+        let body = res.text().await.unwrap_or_default();
+        return Err(format!("update_product_meta failed {status}: {body}").into());
+    }
+    eprintln!("[api/products] product {product_id} meta updated (name={name}, category={category})");
+    Ok(())
+}

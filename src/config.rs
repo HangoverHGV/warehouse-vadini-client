@@ -48,6 +48,14 @@ impl Config {
         }
         #[cfg(not(target_os = "android"))]
         {
+            // Windows: use %APPDATA%\warehouse-vadini
+            #[cfg(target_os = "windows")]
+            if let Ok(appdata) = std::env::var("APPDATA") {
+                let p = PathBuf::from(appdata).join("warehouse-vadini");
+                let _ = fs::create_dir_all(&p);
+                return p;
+            }
+
             if let Ok(data_home) = std::env::var("XDG_DATA_HOME") {
                 let p = PathBuf::from(data_home).join("warehouse-vadini");
                 let _ = fs::create_dir_all(&p);
@@ -73,6 +81,13 @@ impl Config {
         }
         #[cfg(not(target_os = "android"))]
         {
+            // Windows: use %APPDATA%\warehouse-vadini\config.json
+            #[cfg(target_os = "windows")]
+            if let Ok(appdata) = std::env::var("APPDATA") {
+                let p = PathBuf::from(appdata).join("warehouse-vadini/config.json");
+                if p.exists() { return p; }
+            }
+
             // 1. Try XDG_CONFIG_HOME
             if let Ok(cfg_home) = std::env::var("XDG_CONFIG_HOME") {
                 let p = PathBuf::from(cfg_home).join("warehouse-vadini/config.json");
@@ -107,6 +122,12 @@ impl Config {
         }
         #[cfg(not(target_os = "android"))]
         {
+            // Windows: use %APPDATA%\warehouse-vadini\config.json
+            #[cfg(target_os = "windows")]
+            if let Ok(appdata) = std::env::var("APPDATA") {
+                return PathBuf::from(appdata).join("warehouse-vadini/config.json");
+            }
+
             if let Ok(cfg_home) = std::env::var("XDG_CONFIG_HOME") {
                 return PathBuf::from(cfg_home).join("warehouse-vadini/config.json");
             }

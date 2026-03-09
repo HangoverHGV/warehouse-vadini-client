@@ -61,9 +61,8 @@ windows:
 	@echo "[2/3] Packaging MSI..."
 	cargo wix --no-build -o $(BUILD)/
 	@echo "[3/3] Copying installer to releases/windows/..."
-	mkdir -p $(RELEASES)/windows
-	cp $(BUILD)/$(APP)-$(VERSION)-x86_64.msi $(RELEASES)/windows/
-	@echo "→ $(RELEASES)/windows/$(APP)-$(VERSION)-x86_64.msi"
+	powershell -Command "New-Item -ItemType Directory -Force '$(RELEASES)/windows' | Out-Null; Copy-Item '$(BUILD)/$(APP)-$(VERSION)-x86_64.msi' '$(RELEASES)/windows/'"
+	@echo "-> $(RELEASES)/windows/$(APP)-$(VERSION)-x86_64.msi"
 
 # ── Android APK ───────────────────────────────────────────────────────────────
 android:

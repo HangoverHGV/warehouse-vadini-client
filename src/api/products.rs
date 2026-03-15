@@ -252,6 +252,27 @@ pub async fn download_catalog_pdf(
     Ok(res.bytes().await?.to_vec())
 }
 
+pub async fn download_export_xlsx(
+    client: &Client,
+    base_url: &str,
+    token: &str,
+) -> Result<Vec<u8>, ApiError> {
+    let res = client
+        .get(format!("{base_url}/export/xlsx"))
+        .bearer_auth(token)
+        .send()
+        .await?;
+
+    let status = res.status();
+    if !status.is_success() {
+        let body = res.text().await.unwrap_or_default();
+        return Err(format!("download_export_xlsx failed {status}: {body}").into());
+    }
+
+    eprintln!("[api/products] export XLSX downloaded");
+    Ok(res.bytes().await?.to_vec())
+}
+
 pub async fn update_product_image(
     client: &Client,
     base_url: &str,

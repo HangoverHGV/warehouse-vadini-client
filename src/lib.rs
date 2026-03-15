@@ -1453,6 +1453,66 @@ pub fn run_app() -> Result<(), slint::PlatformError> {
         });
     }
 
+    // --- download-export-xlsx ---
+    {
+        let client_xlsx = client.clone();
+        let rt_xlsx = rt.clone();
+        let base_url_xlsx = base_url.clone();
+        let shared_token_xlsx = shared_token.clone();
+        let ui_weak_xlsx = ui.as_weak();
+
+        ui.on_download_export_xlsx(move || {
+            let token = match shared_token_xlsx.lock().unwrap().clone() {
+                Some(t) => t,
+                None => return,
+            };
+            let client = (*client_xlsx).clone();
+            let base_url = base_url_xlsx.clone();
+            let rt = rt_xlsx.clone();
+            let ui_weak = ui_weak_xlsx.clone();
+
+            std::thread::spawn(move || {
+                rt.block_on(async move {
+                    let show_toast = move |msg: String| {
+                        let _ = ui_weak.upgrade_in_event_loop(move |ui| {
+                            ui.set_toast_visible(false);
+                            ui.set_toast_message(msg.into());
+                            ui.set_toast_visible(true);
+                        });
+                    };
+
+                    match api::products::download_export_xlsx(&client, &base_url, &token).await {
+                        Ok(bytes) => {
+                            #[cfg(target_os = "android")]
+                            let downloads = std::path::PathBuf::from("/sdcard/Download");
+                            #[cfg(not(target_os = "android"))]
+                            let downloads = std::env::var("HOME")
+                                .or_else(|_| std::env::var("USERPROFILE"))
+                                .map(|h| std::path::PathBuf::from(h).join("Downloads"))
+                                .unwrap_or_else(|_| std::path::PathBuf::from("."));
+
+                            let path = downloads.join("export.xlsx");
+                            match tokio::fs::write(&path, &bytes).await {
+                                Ok(_) => {
+                                    eprintln!("[main] export XLSX saved to {}", path.display());
+                                    show_toast(format!("XLSX salvat in: {}", path.display()));
+                                }
+                                Err(e) => {
+                                    eprintln!("[main] failed to save XLSX: {e}");
+                                    show_toast(format!("Eroare salvare XLSX: {e}"));
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("[main] download_export_xlsx error: {e}");
+                            show_toast(format!("Eroare descarcare XLSX: {e}"));
+                        }
+                    }
+                });
+            });
+        });
+    }
+
     // --- download-catalog-pdf ---
     {
         let client_pdf = client.clone();

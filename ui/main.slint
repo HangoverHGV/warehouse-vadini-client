@@ -73,6 +73,7 @@ export component Main inherits Window {
     callback load-orders();
     // per-page, order-by, category-break, template-id
     callback download-catalog-pdf(string, string, bool, int);
+    callback download-export-xlsx();
     callback refresh();
     callback logout();
     // Users
@@ -121,6 +122,7 @@ export component Main inherits Window {
             }
             search-changed(q) => { root.search(q); }
             download-catalog-pdf(pp, ob, cb, tmpl) => { root.download-catalog-pdf(pp, ob, cb, tmpl); }
+            download-export-xlsx => { root.download-export-xlsx(); }
             refresh => { root.refresh(); }
             logout => { root.logout(); }
         }

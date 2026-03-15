@@ -5,7 +5,8 @@
       "Bash(ls \"/c/Program Files \\(x86\\)/WiX Toolset/bin/\")",
       "Bash(ls \"/c/Program Files \\(x86\\)/WiX Toolset/\")",
       "Bash(cmd.exe /c \"dir \"\"C:\\\\Program Files \\(x86\\)\\\\WiX*\"\" /b 2>nul\")",
-      "Bash(cmd.exe /c \"where candle.exe 2>nul & dir \"\"C:\\\\Program Files\\\\WiX*\"\" /b 2>nul & dir \"\"C:\\\\Program Files \\(x86\\)\\\\WiX*\"\" /b 2>nul\")"
+      "Bash(cmd.exe /c \"where candle.exe 2>nul & dir \"\"C:\\\\Program Files\\\\WiX*\"\" /b 2>nul & dir \"\"C:\\\\Program Files \\(x86\\)\\\\WiX*\"\" /b 2>nul\")",
+      "Bash(cargo check)"
     ]
   }
 }

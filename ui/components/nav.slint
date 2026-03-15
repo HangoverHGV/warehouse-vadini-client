@@ -18,6 +18,7 @@ export component NavBar inherits Rectangle {
     callback search-changed(string);
     // per-page, order-by, category-break, template-id
     callback download-catalog-pdf(string, string, bool, int);
+    callback download-export-xlsx();
     callback refresh();
     callback logout();
 
@@ -330,6 +331,11 @@ export component NavBar inherits Rectangle {
                         }
                     }
                 }
+            }
+
+            CustomButton {
+                text: "Export XLSX";
+                clicked => { root.download-export-xlsx(); }
             }
 
             CustomButton {
